@@ -1,0 +1,112 @@
+---
+title: Configuração Inicial
+description: "Comprou seu primeiro resource e não sabe como ligar o resource? veja agora."
+---
+
+Esse passo deve ser repetido para TODOS os produtos da sua conta, você precisa configurar todos da mesma maneira, inclusive colocar o ip em cada um no SITE.
+
+
+- [Tutorial Em Vídeo](#tutorial-em-video) --> `Veja como ligar o resource através de um vídeo`
+- [Tutorial Em Texto](#tutorial-em-texto) --> `Veja como ligar o resource passo a passo de maneira escrita`
+- [Erros comuns](#erros-comuns) --> `Veja como resolver possíveis erros ao iniciar o resource`
+
+
+# Tutorial Em vídeo
+<video width="100%" height="400" controls>
+  <source src="/videos/tutorial.mp4" type="video/mp4" />
+  Seu navegador não suporta o elemento de vídeo.
+</video>
+
+# Tutorial Em Texto
+
+## Passo 1
+
+A primeira coisa que você deve fazer é acessar nosso [SITE](https://www.squashcodes.com) e entrar na sua conta clicando em **"Área do Cliente"** no canto superior direito, após isso você deverá acessar as **configurações** da sua conta que fica no canto superior direito, como na imagem abaixo:
+<img
+  className=""
+  src="/images/tutorial/tutorial_1.png"
+  alt="Hero Dark"
+/>
+
+Após isso, você deverá procurar por **Gerenciar licenças**, essa opção fica um pouco abaixo do nome da sua conta, como no exemplo abaixo:
+
+<img
+  className=""
+  src="/images/tutorial/tutorial_2.png"
+  alt="Hero Dark"
+/>
+
+Após isso você terá um painel com todas suas licenças, você deverá escolher o produto que você deseja alterar o IP e vai colocar o IP no campo demonstrado abaixo:
+
+<img
+  className=""
+  src="/images/tutorial/tutorial_3.png"
+  alt="Hero Dark"
+/>
+
+### Como pegar o IP?
+
+#### Host
+Basta você entrar no seu MTA, escolher o seu servidor na lista de servidores e copiar o IP que fica logo acima, como demonstrado abaixo:
+
+<img
+  className=""
+  src="/images/tutorial/tutorial_4.png"
+  alt="Hero Dark"
+/>
+
+#### Servidor Local
+Você terá que entrar nesse [SITE](https://www.squashcodes.com), após entrar você vai copiar o IP que aparecer, depois você vai no seu MTA e pega a porta, então o passo é simples:
+
+IP DO SITE:PORTA DO MTA
+
+
+## Passo 2
+
+Agora que você já colocou o seu IP no site, você deverá fazer a configuração dentro do script, para isso continue no mesmo painel de **GERENCIAR LICENÇAS**
+
+Abra o arquivo de configuração do seu produto, normalmente dentro de uma pasta chamada "config" com o nome "main.lua" ou "config.lua", a primeira linha deverá ser assim:
+
+```lua
+license = {
+    ["Email"] = "",
+    ["Key"] = "",
+}
+```
+
+Agora basta você preencher as informações DENTRO das aspas "", a KEY você deverá pegar no site do GERENCIAR LICENÇAS, como no exemplo abaixo:
+
+<img
+  className=""
+  src="/images/tutorial/tutorial_5.png"
+  alt="Hero Dark"
+/>
+
+Por fim, seu arquivo de configuração deverá ficar da seguinte forma:
+
+```lua
+license = {
+    ["Email"] = "support@squashcodes.com",
+    ["Key"] = "SQUASH-2020-2020",
+}
+```
+
+Caso mesmo assim o seu produto não inicie corretamente, recomendamos que você abra um ticket em nosso canal do [discord](https://discord.gg/XFfKTDF3ak) para que possamos auxiliar da melhor forma
+
+
+# Erros comuns
+
+
+#### getServerIpFromMasterServer
+```
+attempt to call global 'getServerIpFromMasterServer' (a nil value)
+```
+Caso apareça esse erro ao ligar um de nossos produtos, você deve atualizar o seu servidor do MTA para a ultima versão, ou qualquer versão acima de: **1.6.0 r22890**
+
+**Porque esse erro acontece?**
+Essa função é uma função extremamente nova no MTA, então é possível que seu servidor ainda não esteja atualizado para recebê-la.
+
+### Caso você não saiba como atualizar, entre em contato com sua HOSPEDAGEM para que eles atualizem para você.
+
+
+

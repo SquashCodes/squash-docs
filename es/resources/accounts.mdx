@@ -1,0 +1,276 @@
+---
+title: Account System
+description: "Adquiriu o resource de contas e está com dúvidas do sistema? você está no lugar certo!"
+---
+
+<img
+  className=""
+  src="/images/accounts-banner.jpg"
+  alt="Hero Light"
+/>
+
+
+## Resolva problemas comuns
+
+<CardGroup cols={2}>
+  <Card
+    title="Resource não inicia"
+    icon="gear"
+    href="/pt/start"
+  >
+   Está com problemas para iniciar o seu produto? Clique aqui
+  </Card>
+    <Card
+    title="Configurar o resource"
+    icon="gear"
+    href="/pt/resources/accounts#como-configurar-o-resource"
+  >
+   Está com dúvidas de como configurar algo no sistema? Clique aqui
+  </Card>
+</CardGroup>
+
+
+<br />
+<br />
+- [getLoggedPlayerMainName](#getLoggedPlayerMainName) --> `Retorna o nome da conta principal do jogador`
+- [getLoggedPlayerPersonName](#getLoggedPlayerPersonName) --> `Retorna o nome do personagem que o jogador está conectado`
+- [getLoggedPlayerInfos](#getLoggedPlayerInfos) --> `Retorna uma tabela com o nome da conta principal e o nome do personagem`
+- [getCharacterInfos](#getCharacterInfos) --> `Retorna todas as informações do personagem (nome, sobrenome, avatar, gênero, idade, etc...)`
+- [setPlayerCityPosition](#setPlayerCityPosition) --> `Seta o player na posição da cidade natal do mesmo`
+- [manageUserCoins](#manageUserCoins) --> `Seta, remove ou adiciona coins a um usuário`
+- [getUserCoins](#getUserCoins) --> `Retorna a quantidade de coins de um usuário`
+- [getUserMainAvatar](#getUserMainAvatar) --> `Pega o avatar da conta principal de um usuário`
+- [getPlayerAvatar](#getPlayerAvatar) --> `Pega o avatar do personagem que o player está logado`
+
+## getLoggedPlayerMainName
+**Syntax**
+```lua
+exports['sqh_accounts']:getLoggedPlayerMainName('ped' theElement)
+```
+**Required arguments**
+-  _**theElement:**_ Elemento que você irá obter o nome da conta principal
+
+**Example**
+```css
+[SERVER-SIDE]
+```
+O exemplo abaixo cria um comando que permite o jogador ver o nome de sua conta principal
+```lua
+addCommandHandler( 'accountname', -- Exemplo: /accountname
+    function(player, _)
+        local mainName = getLoggedPlayerMainName(player)
+        outputChatBox('Sua conta principal se chama: '..mainName, player, 255, 255, 255)
+    end
+)
+
+```
+
+## getLoggedPlayerPersonName
+**Syntax**
+```lua
+exports['sqh_accounts']:getLoggedPlayerPersonName('ped' theElement)
+```
+**Required arguments**
+-  _**theElement:**_ Elemento que você irá obter o nome do personagem
+
+**Example**
+```css
+[SERVER-SIDE]
+```
+O exemplo abaixo cria um comando que permite o jogador ver o nome do personagem que está conectado
+```lua
+addCommandHandler( 'personname', -- Exemplo: /personname
+    function(player, _)
+        local personName = getLoggedPlayerPersonName(player)
+        outputChatBox('O seu personagem atual se chama: '..personName, player, 255, 255, 255)
+    end
+)
+
+```
+
+## getLoggedPlayerInfos
+**Syntax**
+```lua
+exports['sqh_accounts']:getLoggedPlayerInfos('ped' theElement)
+```
+**Required arguments**
+-  _**theElement:**_ Elemento que você irá obter as informações do personagem e conta principal
+
+**Example**
+```css
+[SERVER-SIDE]
+```
+O exemplo abaixo cria um comando que permite o jogador ver o nome do personagem que está conectado e de sua conta
+```lua
+addCommandHandler( 'infos', -- Exemplo: /infos
+    function(player, _)
+        local personName = getLoggedPlayerInfos(player)
+        outputChatBox('O seu personagem atual se chama: '..personName['personName'].. ' sua conta: '..personName['mainName'], player, 255, 255, 255)
+    end
+)
+```
+
+## getCharacterInfos
+**Syntax**
+```lua
+exports['sqh_accounts']:getCharacterInfos('string' mainName, 'string' character)
+```
+**Required arguments**
+-  _**mainName:**_ Nome da conta principal da qual você quer obter as informações
+-  _**character:**_ Nome do personagem de qual você quer obter as informações (EX: JoohnWiick)
+
+**Example**
+```css
+[SERVER-SIDE]
+```
+O exemplo abaixo cria um comando que permite o jogador ver sua idade
+```lua
+addCommandHandler( 'idade', -- Exemplo: /infos
+    function(player, _)
+        local mainData = getElementData(player, 'accounts:mainName')
+        local playerData = getElementData(player, 'accounts:personName')
+        if (mainData and playerData) then
+            local character = getCharacterInfos(mainData, playerData)
+            if (character['age']) then
+                outputChatBox('Você tem: '..character['age'].. ' anos de idade', player, 255, 255, 255)
+            end
+        end
+    end
+)
+```
+
+## setPlayerCityPosition
+**Syntax**
+```lua
+exports['sqh_accounts']:setPlayerCityPosition('ped' player, 'string' mainName, 'string' personName)
+```
+**Required arguments**
+-  _**player:**_ Jogador que você deseja setar na posição da cidade natal
+-  _**mainName:**_ Nome da conta principal da qual você quer obter a cidade natal
+-  _**character:**_ Nome do personagem de qual você quer obter a cidade natal
+
+**Example**
+```css
+[SERVER-SIDE]
+```
+O exemplo abaixo cria um comando que permite o jogador ver sua idade
+```lua
+addCommandHandler( 'city', -- Exemplo: /infos
+    function(player, _)
+        local mainData = getElementData(player, 'accounts:mainName')
+        local playerData = getElementData(player, 'accounts:personName')
+        if (mainData and playerData) then
+            setPlayerCityPosition(player, mainData, playerData)
+            outputChatBox('Você chegou na sua cidade natal', player, 255, 255, 255)
+        end
+    end
+)
+```
+
+## manageUserCoins
+**Syntax**
+```lua
+exports['sqh_accounts']:manageUserCoins('string' mainName, 'string' typeManage, 'number' amount)
+```
+**Required arguments**
+-  _**mainName:**_ Nome da conta principal que você deseja alterar os coins
+-  _**typeManage:**_ Qual ação você deseja realizar (set, add ou remove)
+-  _**amount:**_ Quantidade que você deseja adicionar/remover/setar
+
+**Example**
+```css
+[SERVER-SIDE]
+```
+O exemplo abaixo cria um comando que permite o jogador gerenciar x coins para ele mesmo
+```lua
+addCommandHandler( 'coins', -- Exemplo: /coins add 1000
+    function(player, _, type, amount)
+        local mainData = getElementData(player, 'accounts:mainName')
+        if (mainData) then
+            manageUserCoins(mainData, type, tonumber(amount))
+            outputChatBox('Você gerenciou '..amount.. ' coins', player, 255, 255, 255)
+        end
+    end
+)
+```
+
+## getUserCoins
+**Syntax**
+```lua
+exports['sqh_accounts']:getUserCoins('string' mainName)
+```
+**Required arguments**
+-  _**mainName:**_ Nome da conta principal que você deseja obter os coins
+
+**Example**
+```css
+[SERVER-SIDE]
+```
+O exemplo abaixo cria um comando que permite o jogador ver quantos coins ele possui
+```lua
+addCommandHandler( 'vercoins', -- Exemplo: /vercoins
+    function(player, _)
+        local mainData = getElementData(player, 'accounts:mainName')
+        if (mainData) then
+            local coins = getUserCoins(mainData)
+            outputChatBox('Você possui '..coins.. ' coins', player, 255, 255, 255)
+        end
+    end
+)
+```
+
+## getUserMainAvatar
+**Syntax**
+```lua
+exports['sqh_accounts']:getUserMainAvatar('string' mainName)
+```
+**Required arguments**
+-  _**mainName:**_ Nome da conta principal que você deseja obter o avatar
+
+**Example**
+```css
+[SERVER-SIDE]
+```
+O exemplo abaixo cria um comando que permite o jogador retornar o numero do seu avatar
+```lua
+addCommandHandler( 'avatar', -- Exemplo: /avatar
+    function(player, _)
+        local mainData = getElementData(player, 'accounts:mainName')
+        if (mainData) then
+            local avatar = getUserMainAvatar(mainData)
+            outputChatBox('Seu avatar é o: '..avatar, player, 255, 255, 255)
+        end
+    end
+)
+```
+
+## getPlayerAvatar
+**Syntax**
+```lua
+exports['sqh_accounts']:getPlayerAvatar('ped' theElement)
+```
+**Required arguments**
+-  _**theElement:**_ Player que você deseja obter o avatar do personagem logado
+
+**Example**
+```css
+[SERVER-SIDE]
+```
+O exemplo abaixo cria um comando que permite o jogador retornar o numero do avatar do seu personagem logado
+```lua
+addCommandHandler( 'avatar', -- Exemplo: /avatar
+    function(player, _)
+        local avatar = getPlayerAvatar(player)
+        outputChatBox('Seu avatar é o: '..avatar, player, 255, 255, 255)
+    end
+)
+```
+
+
+<br />
+<br />
+<br />
+<br />
+<br />
+# Como configurar o resource? 
+

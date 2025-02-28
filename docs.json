@@ -1,54 +1,94 @@
 {
   "$schema": "https://mintlify.com/docs.json",
   "theme": "mint",
-  "name": "Mint Starter Kit",
+  "name": "Squash Company",
   "colors": {
-    "primary": "#16A34A",
-    "light": "#07C983",
-    "dark": "#15803D"
+    "primary": "#7526D8",
+    "light": "#905CFF",
+    "dark": "#0D001D"
   },
   "favicon": "/favicon.svg",
   "navigation": {
     "tabs": [
       {
-        "tab": "Guides",
+        "tab": "Guia de Uso",
         "groups": [
           {
-            "group": "Get Started",
+            "group": "Introdução",
             "pages": [
-              "introduction",
-              "quickstart",
-              "development"
+              "introduction"
             ]
           },
           {
-            "group": "Essentials",
+            "group": "Configuração e Instalação",
             "pages": [
-              "essentials/markdown",
-              "essentials/code",
-              "essentials/images",
-              "essentials/settings",
-              "essentials/navigation",
-              "essentials/reusable-snippets"
+              "configuration/overview",
+              "configuration/installation",
+              "configuration/settings",
+              "configuration/navigation",
+              "configuration/customization"
             ]
           }
         ]
       },
       {
-        "tab": "API Reference",
+        "tab": "Resources",
         "groups": [
           {
-            "group": "API Documentation",
+            "group": "Visão Geral",
             "pages": [
-              "api-reference/introduction"
+              "resources/overview"
             ]
           },
           {
-            "group": "Endpoint Examples",
+            "group": "Phone System",
             "pages": [
-              "api-reference/endpoint/get",
-              "api-reference/endpoint/create",
-              "api-reference/endpoint/delete"
+              "resources/phone-system/introduction",
+              "resources/phone-system/setup",
+              "resources/phone-system/advanced",
+              "resources/phone-system/api"
+            ]
+          },
+          {
+            "group": "Custom Characters",
+            "pages": [
+              "resources/custom-characters/introduction",
+              "resources/custom-characters/config",
+              "resources/custom-characters/api"
+            ]
+          },
+          {
+            "group": "Outros Resources",
+            "pages": [
+              "resources/other/introduction",
+              "resources/other/resource1",
+              "resources/other/resource2"
+            ]
+          }
+        ]
+      },
+      {
+        "tab": "Artigos e Notícias",
+        "groups": [
+          {
+            "group": "Destaques",
+            "pages": [
+              "articles/latest",
+              "articles/insights"
+            ]
+          }
+        ]
+      },
+      {
+        "tab": "Empresa",
+        "groups": [
+          {
+            "group": "Sobre a Squash Codes",
+            "pages": [
+              "company/about",
+              "company/brand",
+              "company/legal",
+              "company/support"
             ]
           }
         ]
@@ -57,22 +97,65 @@
     "global": {
       "anchors": [
         {
-          "anchor": "Documentation",
-          "href": "https://mintlify.com/docs",
-          "icon": "book-open-cover"
+          "anchor": "Acesse nosso website",
+          "icon": "globe",
+          "href": "https://squashcodes.com"
         },
         {
-          "anchor": "Community",
-          "href": "https://mintlify.com/community",
-          "icon": "slack"
+          "anchor": "Entre em nosso Discord",
+          "icon": "discord",
+          "href": "https://discord.gg/GhMFvKPG4t"
         },
         {
-          "anchor": "Blog",
-          "href": "https://mintlify.com/blog",
-          "icon": "newspaper"
+          "anchor": "Siga-nos no Instagram",
+          "icon": "instagram",
+          "href": "https://instagram.com/squashcodes"
+        },
+        {
+          "anchor": "Siga-nos no Youtube",
+          "icon": "youtube",
+          "href": "https://youtube.com/SquashCodes"
         }
       ]
-    }
+    },
+    "languages": [
+      {
+        "language": "pt-BR",
+        "groups": [
+          {
+            "group": "Geral",
+            "pages": ["pt/introduction", "pt/start", "pt/terms", "pt/changelogs", "pt/support"]
+          },
+          {
+            "group": "Resources",
+            "pages": [
+              "pt/resources/phone-system",
+              "pt/resources/custom-characters",
+              "pt/resources/group-system",
+              "pt/resources/accounts"
+            ]
+          }
+        ]
+      },
+      {
+        "language": "en",
+        "groups": [
+          {
+            "group": "General",
+            "pages": ["en/introduction", "en/start", "en/terms", "en/changelogs", "en/support"]
+          },
+          {
+            "group": "Resources",
+            "pages": [
+              "en/resources/phone-system",
+              "en/resources/custom-characters",
+              "en/resources/group-system",
+              "en/resources/accounts"
+            ]
+          }
+        ]
+      }
+    ]
   },
   "logo": {
     "light": "/logo/light.svg",
@@ -82,20 +165,20 @@
     "links": [
       {
         "label": "Support",
-        "href": "mailto:hi@mintlify.com"
+        "href": "mailto:support@squashcodes.com"
       }
     ],
     "primary": {
       "type": "button",
       "label": "Dashboard",
-      "href": "https://dashboard.mintlify.com"
+      "href": "https://squashcodes.com/dashboard"
     }
   },
   "footer": {
     "socials": {
-      "x": "https://x.com/mintlify",
-      "github": "https://github.com/mintlify",
-      "linkedin": "https://linkedin.com/company/mintlify"
+      "x": "https://x.com/squashcodes",
+      "github": "https://github.com/squashcodes",
+      "linkedin": "https://linkedin.com/company/squashcodes"
     }
   }
 }

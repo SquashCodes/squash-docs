@@ -1,0 +1,419 @@
+---
+title: Custom Characters
+description: "Adquiriu o resource de customização de personagens e está com dúvidas do sistema? você está no lugar certo!"
+---
+
+<img
+  className=""
+  src="/images/custom-characters-banner.jpg"
+  alt="Hero Light"
+/>
+
+
+## Resolva problemas comuns
+
+<CardGroup cols={2}>
+  <Card
+    title="Resource não inicia"
+    icon="gear"
+    href="/pt/start"
+  >
+   Está com problemas para iniciar o seu produto? Clique aqui
+  </Card>
+    <Card
+    title="Configurar o resource"
+    icon="gear"
+    href="/pt/resources/custom-characters#como-configurar-o-resource"
+  >
+   Está com dúvidas de como configurar algo no custom? Clique aqui
+  </Card>
+</CardGroup>
+
+
+<br />
+<br />
+- [changeClothesElement](#changeClothesElement) --> `Altera/seta/remove a roupa de um jogador`
+- [setSkinTone](#setSkinTone) --> `Altera o tom de pele de um jogador`
+- [getPlayerGender](#getPlayerGender) --> `Retorna o gênero de um jogador`
+- [takeClothesPlayer](#takeClothesPlayer) --> `Retira todas as roupas do jogador (somente do corpo, não retira da DB!)`
+- [updateTypeSelected](#updateTypeSelected) --> `Troca o tipo de roupas escolhida entre corp ou roupas normais`
+- [resetCharacter](#resetCharacter) --> `Reseta a conta de um jogador para ele criar um novo personagem`
+- [loadClothesElement](#loadClothesElement) --> `Carrega todas as roupas do jogador`
+- [showCreatePerson](#showCreatePerson) --> `Carrega as roupas caso o jogador já tenha criado um personagem, se não, carrega o painel de criação`
+- [getAccountClothes](#getAccountClothes) --> `Retorna as roupas de uma conta`
+- [getPlayerClothes](#getPlayerClothes) --> `Retorna as roupas do jogador`
+- [setClothesPed](#setClothesPed) --> `Define roupas para um ped`
+- [setSkintonePed](#setSkintonePed) --> `Define o tom de pele de um ped`
+
+## changeClothesElement
+**Syntax**
+```lua
+exports['sqh_custom']:changeClothesElement('ped' theElement, 'element or table' forPlayer, 'table' infos)
+```
+**Required arguments**
+-  _**theElement:**_ Elemento que você irá setar a roupa (player)
+-  _**forPlayer:**_ Quem irá ver as roupas desse elemento
+-  _**table:**_ Uma tabela que necessita dos seguintes índices:
+    - **typeModel:** O tipo de roupa que você está mudando ('corp' ou 'default')
+    - **bodyPart:**  A parte do corpo que a roupa irá ser colocada ('torso', 'legs', 'head', 'feet'...)
+    - **clotheType** O tipo da roupa que será colocada, ('camisa.padrao')
+    - **clotheTexture** A textura da roupa que será colocada, ('1.png')
+    - **gender** O gênero do jogador, ('male' or 'female')
+
+**Example**
+```css
+[SERVER-SIDE]
+```
+O exemplo abaixo cria um comando que permite o jogador definir uma roupa nele mesmo
+```lua
+addCommandHandler( 'clothe', -- Exemplo: /clothe default torso camisa.padrao 10.png male
+    function(player, _, typeModel, bodyPart, clotheType, clotheTexture,gender)
+        if (typeModel and bodyPart and clotheType and clotheTexture and gender) then
+            exports['sqh_custom']:changeClothesElement(player, player, {typeModel = typeModel, bodyPart = bodyPart, clotheType = clotheType, clotheTexture = clotheTexture, gender = gender})
+            outputChatBox('Roupa colocada com sucesso!', player, 136, 201, 115)
+        else
+            outputChatBox('Não foi possível adicionar a roupa! (parâmetro incorreto)', player, 201, 73, 73)
+        end
+    end
+)
+```
+
+## setSkinTone
+**Syntax**
+```lua
+exports['sqh_custom']:setSkinTone('table' infos)
+```
+**Required arguments**
+-  _**table:**_ Uma tabela que necessita dos seguintes índices:
+    - **player:** O jogador que você irá mudar o tom de pele
+    - **texture** A textura do tom de pele que será colocado, ('whi.png')
+    - **gender** O gênero do jogador, ('male' or 'female')
+
+**Example**
+```css
+[CLIENT-SIDE]
+```
+O exemplo abaixo cria um comando que permite o jogador definir um tom de pele nele mesmo
+```lua
+
+addCommandHandler( 'skintone', -- Exemplo: /skintone whi male
+    function(_, texture, gender)
+        if (texture and gender) then
+            exports['sqh_custom']:setSkinTone({texture = texture, gender = gender, player = localPlayer})
+            outputChatBox('Tom de pele colocado com sucesso!', 136, 201, 115)
+        else
+            outputChatBox('Não foi possível trocar o tom de pele! (parâmetro incorreto)', 201, 73, 73)
+        end
+    end
+)
+```
+
+## getPlayerGender
+**Syntax**
+```lua
+exports['sqh_custom']:getPlayerGender('ped' theElement)
+```
+**Required arguments**
+-  _**theElement:**_ O jogador que você quer obter o gênero
+
+**Returns**
+- Retorna o gênero do jogador caso o jogador já tenha um personagem, caso contrário irá retornar false
+
+**Example**
+```css
+[SERVER-SIDE]
+```
+O exemplo abaixo cria um comando que permite o jogador possa ver seu próprio gênero
+```lua
+addCommandHandler( 'gender', -- Exemplo: /gender
+    function(player, _)
+        if (player) then
+            local genderPlayer = exports['sqh_custom']:getPlayerGender(player)
+            outputChatBox('Seu gênero é: '..genderPlayer, player, 136, 201, 115)
+        else
+            outputChatBox('Não foi possível retornar seu gênero! (parâmetro incorreto)', player, 201, 73, 73)
+        end
+    end
+)
+```
+
+## takeClothesPlayer
+**Syntax**
+```lua
+exports['sqh_custom']:takeClothesPlayer('ped' theElement, 'string' gender)
+```
+**Required arguments**
+-  _**theElement:**_ O jogador que você quer retirar as roupas
+-  _**gender:**_ O gênero do jogador
+
+**Example**
+```css
+[SERVER-SIDE]
+```
+O exemplo abaixo cria um comando que retira as próprias roupas
+```lua
+addCommandHandler( 'takeclothes', -- Exemplo: /takeclothes male
+    function(player, _, gender)
+        if (player and gender) then
+            exports['sqh_custom']:takeClothesPlayer(player, gender)
+            outputChatBox('Você retirou suas roupas!', player, 136, 201, 115)
+        else
+            outputChatBox('Não foi possível retirar suas roupas! (parâmetro incorreto)', player, 201, 73, 73)
+        end
+    end
+)
+```
+
+## updateTypeSelected
+**Syntax**
+```lua
+exports['sqh_custom']:updateTypeSelected('ped' theElement, 'string' typeSelect, skinUpdate)
+```
+**Required arguments**
+-  _**theElement:**_ O jogador que você quer atualizar o tipo de roupa 
+-  _**typeSelect:**_ O tipo para qual você quer mudar as roupas do player ('corp' ou 'default')
+
+**Optional arguments**
+-  _**skinUpdate:**_ O id da skin que deverá ser definido na database
+
+
+**Example**
+```css
+[SERVER-SIDE]
+```
+O exemplo abaixo cria um comando que troca as roupas do jogador para as roupas de corp
+```lua
+addCommandHandler( 'update', -- Exemplo: /update corp
+    function(player, _, typeUpdate)
+        if (player and typeUpdate) then
+            exports['sqh_custom']:updateTypeSelected(player, typeUpdate)
+            outputChatBox('Você atualizou o tipo para: '..typeUpdate, player, 136, 201, 115)
+        else
+            outputChatBox('Não foi possível atualizar! (parâmetro incorreto)', player, 201, 73, 73)
+        end
+    end
+)
+```
+
+## resetCharacter
+**Syntax**
+```lua
+exports['sqh_custom']:resetCharacter('ped' theElement)
+```
+**Required arguments**
+-  _**theElement:**_ O jogador que você quer resetar a conta
+
+**Example**
+```css
+[SERVER-SIDE]
+```
+O exemplo abaixo cria um comando que reseta a conta do jogador
+```lua
+addCommandHandler( 'reset', -- Exemplo: /reset
+    function(player, _)
+        if (player) then
+            exports['sqh_custom']:resetCharacter(player)
+            outputChatBox('Você resetou sua conta', player, 136, 201, 115)
+        else
+            outputChatBox('Não foi possível resetar! (parâmetro incorreto)', player, 201, 73, 73)
+        end
+    end
+)
+```
+
+## showCreatePerson
+**Syntax**
+```lua
+exports['sqh_custom']:showCreatePerson('ped' theElement)
+```
+**Required arguments**
+-  _**theElement:**_ O jogador que você quer abrir o painel de criação ou carregar o personagem
+
+**Example**
+```css
+[SERVER-SIDE]
+```
+O exemplo abaixo cria um comando que irá abrir o painel de criação ou carregar as roupas caso já tenha criado
+```lua
+addCommandHandler( 'showcreate', -- Exemplo: /showcreate
+    function(player, _)
+        if (player) then
+            exports['sqh_custom']:showCreatePerson(player)
+            outputChatBox('Você chamou o create', player, 136, 201, 115)
+        else
+            outputChatBox('Não foi possível chamar a função! (parâmetro incorreto)', player, 201, 73, 73)
+        end
+    end
+)
+```
+
+## loadClothesElement
+**Syntax**
+```lua
+exports['sqh_custom']:showCreatePerson('ped' theElement, 'element or table' forPlayer, forceTypeModel)
+```
+**Required arguments**
+-  _**theElement:**_ O jogador que você quer carregar as roupas
+-  _**forPlayer:**_ O jogador que irá ver as roupas do player que está sendo carregado
+
+**Optional arguments**
+-  _**forceTypeModel:**_ Caso você queira carregar uma roupa especifica como de ('corp' ou 'default')
+
+**Example**
+```css
+[SERVER-SIDE]
+```
+O exemplo abaixo cria um comando que irá carregar minhas roupas para mim mesmo
+```lua
+addCommandHandler( 'loadclothes', -- Exemplo: /loadclothes
+    function(player, _)
+        if (player) then
+            exports['sqh_custom']:loadClothesElement(player, player)
+            outputChatBox('Você carregou as roupas do player', player, 136, 201, 115)
+        else
+            outputChatBox('Não foi possível chamar a função! (parâmetro incorreto)', player, 201, 73, 73)
+        end
+    end
+)
+```
+
+## getPlayerClothes
+**Syntax**
+```lua
+exports['sqh_custom']:getPlayerClothes('player' theElement, 'string' typeClothes)
+```
+**Required arguments**
+-  _**theElement:**_ O jogador que você quer retornar as roupas
+
+**Optional arguments**
+-  _**typeClothes:**_ Caso você queira retornar uma roupa especifica como de ('corp', 'default', 'tattos' ou 'faceshared')
+
+**Returns**
+- Retorna uma tabela contendo as roupas do jogador
+
+**Example**
+```css
+[SERVER-SIDE]
+```
+O exemplo abaixo cria um comando que irá retornar as roupas do jogador no debugscript
+```lua
+addCommandHandler( 'retornarroupas', -- Exemplo: /retornarroupas
+    function(player, _)
+        if (player) then
+            local roupas = exports['sqh_custom']:getPlayerClothes(player, 'default')
+            iprint(roupas)
+        else
+            outputChatBox('Não foi possível chamar a função! (parâmetro incorreto)', player, 201, 73, 73)
+        end
+    end
+)
+```
+
+## getAccountClothes
+**Syntax**
+```lua
+exports['sqh_custom']:getAccountClothes('account' string, 'string' typeClothes)
+```
+**Required arguments**
+-  _**account:**_ A conta que você deseja retornar as roupas
+
+**Optional arguments**
+-  _**typeClothes:**_ Caso você queira retornar uma roupa especifica como de ('corp', 'default', 'tattos' ou 'faceshared')
+
+**Returns**
+- Retorna uma tabela contendo as roupas do jogador
+
+**Example**
+```css
+[SERVER-SIDE]
+```
+O exemplo abaixo cria um comando que irá retornar as roupas do jogador no debugscript
+```lua
+addCommandHandler( 'retornarroupas', -- Exemplo: /retornarroupas Joao
+    function(player, _, account)
+        if (player) then
+            local roupas = exports['sqh_custom']:getAccountClothes(account, 'default')
+            iprint(roupas)
+        else
+            outputChatBox('Não foi possível chamar a função! (parâmetro incorreto)', player, 201, 73, 73)
+        end
+    end
+)
+```
+
+## setClothesPed
+**Syntax**
+```lua
+exports['sqh_custom']:setClothesPed('ped' theElement, 'element or table' forPlayer, 'table' typeClothes)
+```
+**Required arguments**
+-  _**theElement:**_ Elemento que você irá setar a roupa (ped)
+-  _**forPlayer:**_ O elemento 'player' que irá visualizar as roupas do ped
+-  _**typeClothes:**_ Uma tabela que necessita dos seguintes índices:
+    - **typeModel:** O tipo de roupa que você está mudando ('corp' ou 'default')
+    - **bodyPart:**  A parte do corpo que a roupa irá ser colocada ('torso', 'legs', 'head', 'feet'...)
+    - **clotheType** O tipo da roupa que será colocada, ('camisa.padrao')
+    - **clotheTexture** A textura da roupa que será colocada, ('1.png')
+    - **gender** O gênero do jogador, ('male' or 'female')
+
+**Example**
+```css
+[SERVER-SIDE]
+```
+O exemplo abaixo cria um comando que irá criar um ped e setar uma bermuda nele
+```lua
+addCommandHandler( 'criarped', -- Exemplo: /criarped
+    function(player, _)
+        if (player) then
+            local x, y, z  = getElementPosition(player)
+            local ped = createPed(1, x, y, z)
+            exports['sqh_custom']:setClothesPed(ped, player, {typeModel = "default", bodyPart = "legs", clotheType = "pati.bermuda", clotheTexture = "1.png", gender = "male"})
+        else
+            outputChatBox('Não foi possível chamar a função! (parâmetro incorreto)', player, 201, 73, 73)
+        end
+    end
+)
+```
+
+
+## setSkintonePed
+**Syntax**
+```lua
+exports['sqh_custom']:setSkintonePed('ped' theElement, 'element or table' forPlayer, 'table' infos)
+```
+**Required arguments**
+-  _**theElement:**_ O elemento 'ped' que irá receber o tom de pele
+-  _**forPlayer:**_ O elemento 'player' que irá visualizar as roupas do ped
+-  _**table:**_ Uma tabela que necessita dos seguintes índices:
+    - **texture** A textura do tom de pele que será colocado, ('whi.png')
+    - **gender** O gênero do ped, ('male' or 'female')
+
+**Example**
+```css
+[SERVER-SIDE]
+```
+O exemplo abaixo cria um comando que cria um elemento ped e altera o tom de pele dele
+```lua
+
+addCommandHandler( 'criarped', -- Exemplo: /criarped whi male
+    function(player, _, texture, gender)
+        if (texture and gender) then
+            local x, y, z  = getElementPosition(player)
+            local ped = createPed(1, x, y, z)
+            exports['sqh_custom']:setSkintonePed(ped, player, {texture = texture, gender = gender})
+            outputChatBox('Tom de pele colocado com sucesso!', 136, 201, 115)
+        else
+            outputChatBox('Não foi possível trocar o tom de pele! (parâmetro incorreto)', 201, 73, 73)
+        end
+    end
+)
+```
+
+
+<br />
+<br />
+<br />
+<br />
+<br />
+# Como configurar o resource? 
+

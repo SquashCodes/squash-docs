@@ -1,0 +1,561 @@
+---
+title: Group System
+description: "Adquiriu o resource de grupos e está com dúvidas do sistema? você está no lugar certo!"
+---
+
+<img
+  className=""
+  src="/images/group-system-banner.jpg"
+  alt="Hero Light"
+/>
+
+
+## Resolva problemas comuns
+
+<CardGroup cols={2}>
+  <Card
+    title="Resource não inicia"
+    icon="gear"
+    href="/pt/start"
+  >
+   Está com problemas para iniciar o seu produto? Clique aqui
+  </Card>
+    <Card
+    title="Configurar o resource"
+    icon="gear"
+    href="/pt/resources/group-system#como-configurar-o-resource"
+  >
+   Está com dúvidas de como configurar algo no sistema? Clique aqui
+  </Card>
+</CardGroup>
+
+
+<br />
+<br />
+- [getGroups](#getGroups) --> `Retorna todos os grupos criados`
+- [getGroupInfo](#getGroupInfo) --> `Retorna todos os dados de um grupo específico`
+- [addGroupBalance](#addGroupBalance) --> `Adiciona dinheiro ao cofre do grupo`
+- [setGroupBalance](#setGroupBalance) --> `Define o dinheiro do cofre de um grupo específico`
+- [removeGroupBalance](#removeGroupBalance) --> `Retira a quantia de dinheiro especificada do cofre do grupo`
+- [createGroupEvent](#createGroupEvent) --> `Cria um evento no calendário do grupo`
+- [deleteGroupEvent](#deleteGroupEvent) --> `Deleta um evento no calendário do grupo`
+- [setPlayerRoleInGroup](#setPlayerRoleInGroup) --> `Seta um cargo do jogador no grupo`
+- [changeGroupPermissionRole](#changeGroupPermissionRole) --> `Alterar as permissões de um cargo dentro do grupo`
+- [createInvite](#createInvite) --> `Cria um convite para um jogador`
+- [removeInvite](#removeInvite) --> `Remove um convite de um jogador`
+- [deleteGroup](#deleteGroup) --> `Deleta um grupo específico`
+- [verifyGroup](#verifyGroup) --> `Verifica um grupo específico`
+- [addPlayerToGroup](#addPlayerToGroup) --> `Adicionar um jogador diretamente no grupo`
+- [removePlayerFromGroup](#removePlayerFromGroup) --> `Remove um jogador diretamente do grupo`
+- [editGroupInfo](#editGroupInfo) --> `Edita informações específicas do grupo`
+- [playerHasPermission](#playerHasPermission) --> `Verifica se o jogador tem uma permissão específica do grupo`
+- [getPlayerGroups](#getPlayerGroups) --> `Retorna todos os grupos de um jogador específico`
+
+## getGroups
+**Syntax**
+```lua
+exports['sqh_groups']:getGroups()
+```
+**Returns**
+- Retorna uma tabela contendo todos os grupos criados e suas respectivas informações
+
+**Example**
+```css
+[SERVER-SIDE]
+```
+O exemplo abaixo cria um comando que irá retornar os grupos criados no debugscript
+```lua
+addCommandHandler( 'vergrupos', -- Exemplo: /vergrupos
+    function(player, _)
+        if (player) then
+            local grupos = exports['sqh_groups']:getGroups()
+            iprint(grupos)
+        else
+            outputChatBox('Não foi possível chamar a função! (parâmetro incorreto)', player, 201, 73, 73)
+        end
+    end
+)
+```
+
+## getGroupInfo
+**Syntax**
+```lua
+exports['sqh_groups']:getGroupInfo('number' groupID)
+```
+
+**Required arguments**
+-  _**groupID:**_ O id do grupo que você deseja buscar as informações
+
+**Returns**
+- Retorna uma tabela contendo todas informações do grupo que foi passado o ID
+
+**Example**
+```css
+[SERVER-SIDE]
+```
+O exemplo abaixo cria um comando que irá retornar as informações do grupo especificado no debugscript
+```lua
+addCommandHandler( 'vergrupo', -- Exemplo: /vergrupo 1
+    function(player, _, groupID)
+        if (player) then
+            local grupoInfo = exports['sqh_groups']:getGroupInfo(groupID)
+            iprint(grupoInfo)
+        else
+            outputChatBox('Não foi possível chamar a função! (parâmetro incorreto)', player, 201, 73, 73)
+        end
+    end
+)
+```
+
+## addGroupBalance
+**Syntax**
+```lua
+exports['sqh_groups']:addGroupBalance('number' groupID, 'number' value)
+```
+**Required arguments**
+-  _**groupID:**_ O id do grupo que irá receber o dinheiro
+-  _**value:**_ A quantidade de dinheiro que você deseja adicionar ao cofre do grupo
+
+**Example**
+```css
+[SERVER-SIDE]
+```
+O exemplo abaixo cria um comando que irá adicionar dinheiro ao grupo especificado no comando
+```lua
+addCommandHandler( 'addsaldo', -- Exemplo: /addsaldo 1 5000
+    function(player, _, groupID, value)
+        if (player) then
+            exports['sqh_groups']:addGroupBalance(tonumber(groupID), tonumber(value))
+            outputChatBox('Dinheiro adicionado corretamente', player, 201, 73, 73)
+        else
+            outputChatBox('Não foi possível chamar a função! (parâmetro incorreto)', player, 201, 73, 73)
+        end
+    end
+)
+```
+
+## setGroupBalance
+**Syntax**
+```lua
+exports['sqh_groups']:setGroupBalance('number' groupID, 'number' value)
+```
+**Required arguments**
+-  _**groupID:**_ O id do grupo que irá receber o dinheiro
+-  _**value:**_ A quantidade de dinheiro que o grupo terá agora
+
+**Example**
+```css
+[SERVER-SIDE]
+```
+O exemplo abaixo cria um comando que irá setar o dinheiro do grupo especifico para 10000
+```lua
+addCommandHandler( 'setsaldo', -- Exemplo: /setsaldo 1 10000
+    function(player, _, groupID, value)
+        if (player) then
+            exports['sqh_groups']:setGroupBalance(tonumber(groupID), tonumber(value))
+            outputChatBox('Dinheiro setado corretamente', player, 201, 73, 73)
+        else
+            outputChatBox('Não foi possível chamar a função! (parâmetro incorreto)', player, 201, 73, 73)
+        end
+    end
+)
+```
+
+## removeGroupBalance
+**Syntax**
+```lua
+exports['sqh_groups']:removeGroupBalance('number' groupID, 'number' value)
+```
+**Required arguments**
+-  _**groupID:**_ O id do grupo que irá receber o dinheiro
+-  _**value:**_ A quantidade de dinheiro que será retirado do cofre do grupo
+
+**Example**
+```css
+[SERVER-SIDE]
+```
+O exemplo abaixo cria um comando que irá retirar 2500 do cofre do grupo
+```lua
+addCommandHandler( 'remsaldo', -- Exemplo: /remsaldo 1 2500
+    function(player, _, groupID, value)
+        if (player) then
+            exports['sqh_groups']:removeGroupBalance(tonumber(groupID), tonumber(value))
+            outputChatBox('Dinheiro removido corretamente', player, 201, 73, 73)
+        else
+            outputChatBox('Não foi possível chamar a função! (parâmetro incorreto)', player, 201, 73, 73)
+        end
+    end
+)
+```
+
+## createGroupEvent
+**Syntax**
+```lua
+exports['sqh_groups']:createGroupEvent('number' groupID, 'string' eventName, 'string' durationEvent, 'string' iconEvent, 'timestamp' startTimestamp, 'number' monthCreation, 'number' dayCreation)
+```
+**Required arguments**
+-  _**groupID:**_ O id do grupo que irá criar o evento
+-  _**eventName:**_ O nome que será dado ao evento
+-  _**durationEvent:**_ A duração que terá o evento
+-  _**iconEvent:**_ O icone que o evento irá ter
+-  _**startTimestamp:**_ O timestamp do horário que o evento irá começar
+-  _**monthCreation:**_ O mês que o evento será criado
+-  _**dayCreation:**_ O dia do mês que o evento será criado
+
+**Example**
+```css
+[SERVER-SIDE]
+```
+O exemplo abaixo cria um comando que irá criar um evento no dia 27/12 as 17:00
+```lua
+addCommandHandler( 'criarevento', -- Exemplo: /criarevento 1 Patrulha 17:00 - 18:00 1 1703696400 12 27
+    function(player, _, groupID, eventName, durationEvent, iconEvent, startTimestamp, monthCreation, dayCreation)
+        if (player) then
+            exports['sqh_groups']:createGroupEvent(groupID, eventName, durationEvent, iconEvent, startTimestamp, monthCreation, dayCreation)
+            outputChatBox('Evento criado corretamente', player, 201, 73, 73)
+        else
+            outputChatBox('Não foi possível chamar a função! (parâmetro incorreto)', player, 201, 73, 73)
+        end
+    end
+)
+```
+
+## deleteGroupEvent
+**Syntax**
+```lua
+exports['sqh_groups']:deleteGroupEvent('number' groupID, 'timestamp' eventTimestamp, 'string' eventName)
+```
+**Required arguments**
+-  _**groupID:**_ O id do grupo que irá deletar o evento
+-  _**eventTimestamp:**_ O timestamp do evento que será deletado
+-  _**eventName:**_ O nome do evento que será deletado
+
+**Example**
+```css
+[SERVER-SIDE]
+```
+O exemplo abaixo cria um comando que irá deletar o evento criado no dia 27/12 as 17:00
+```lua
+addCommandHandler( 'delevento', -- Exemplo: /delevento 1 1703696400 Patrulha 
+    function(player, _, groupID, eventTimestamp, eventName)
+        if (player) then
+            exports['sqh_groups']:deleteGroupEvent(groupID, eventTimestamp, eventName)
+            outputChatBox('Evento removido corretamente', player, 201, 73, 73)
+        else
+            outputChatBox('Não foi possível chamar a função! (parâmetro incorreto)', player, 201, 73, 73)
+        end
+    end
+)
+```
+
+## setPlayerRoleInGroup
+**Syntax**
+```lua
+exports['sqh_groups']:setPlayerRoleInGroup('player' theElement, 'number' groupID, 'string' roleName)
+```
+**Required arguments**
+-  _**theElement:**_ O elemento do jogador que irá receber o novo cargo
+-  _**groupID:**_ O id do grupo que irá setar o cargo do jogador
+-  _**roleName:**_ O nome do cargo que o jogador irá receber
+
+**Example**
+```css
+[SERVER-SIDE]
+```
+O exemplo abaixo cria um comando que irá setar o cargo de Oficial para o jogador no grupo 1
+```lua
+addCommandHandler( 'pegarcargo', -- Exemplo: /pegarcargo 1 Oficial
+    function(player, _, groupID, roleName)
+        if (player) then
+            exports['sqh_groups']:setPlayerRoleInGroup(player, groupID, roleName)
+            outputChatBox('Cargo definido corretamente', player, 201, 73, 73)
+        else
+            outputChatBox('Não foi possível chamar a função! (parâmetro incorreto)', player, 201, 73, 73)
+        end
+    end
+)
+```
+## changeGroupPermissionRole
+**Syntax**
+```lua
+exports['sqh_groups']:changeGroupPermissionRole('number' groupID, 'string' roleName, 'string' permissionName, 'boolean' status)
+```
+**Required arguments**
+-  _**groupID:**_ O id do grupo que irá mudar a permissão do cargo
+-  _**roleName:**_ O nome do cargo que sofrerá as mudanças
+-  _**permissionName:**_ O nome da permissão que receberá o novo valor 
+-  _**status:**_ Um boolean para definir se está ativo ou não (true ou false)
+
+
+
+**Example**
+```css
+[SERVER-SIDE]
+```
+O exemplo abaixo cria um comando que irá definir que o cargo Recruta não pode abrir o CHAT
+```lua
+addCommandHandler( 'mudarperm', -- Exemplo: /mudarperm 1 Recruta accessCalendar false
+    function(player, _, groupID, roleName, permissionName, value)
+        if (player) then
+            exports['sqh_groups']:changeGroupPermissionRole(groupID, roleName, permissionName, status)
+            outputChatBox('Cargo definido corretamente', player, 201, 73, 73)
+        else
+            outputChatBox('Não foi possível chamar a função! (parâmetro incorreto)', player, 201, 73, 73)
+        end
+    end
+)
+```
+## createInvite
+**Syntax**
+```lua
+exports['sqh_groups']:createInvite('player' elmentInviter, 'number' groupID, 'player' theElement)
+```
+**Required arguments**
+-  _**elmentInviter:**_ O jogador que convidou o theElement
+-  _**groupID:**_ O id do grupo que o jogador irá receber o convite
+-  _**theElement:**_ O jogador que irá receber o convite
+
+**Example**
+```css
+[SERVER-SIDE]
+```
+O exemplo abaixo cria um comando que irá criar um auto-convite para o player
+```lua
+addCommandHandler( 'autoinvite', -- Exemplo: /autoinvite 1 
+    function(player, _, groupID)
+        if (player) then
+            exports['sqh_groups']:createInvite(player, groupID, player)
+            outputChatBox('Convite enviado corretamente', player, 201, 73, 73)
+        else
+            outputChatBox('Não foi possível chamar a função! (parâmetro incorreto)', player, 201, 73, 73)
+        end
+    end
+)
+```
+## removeInvite
+**Syntax**
+```lua
+exports['sqh_groups']:removeInvite('number' groupID, 'player' theElement)
+```
+**Required arguments**
+-  _**groupID:**_ O id do grupo que o jogador tem um convite
+-  _**theElement:**_ O jogador que o convite será apagado
+
+**Example**
+```css
+[SERVER-SIDE]
+```
+O exemplo abaixo cria um comando que irá remover o convite do próprio jogaodr
+```lua
+addCommandHandler( 'reminvite', -- Exemplo: /reminvite 1 
+    function(player, _, groupID)
+        if (player) then
+            exports['sqh_groups']:createInvite(groupID, player)
+            outputChatBox('Convite removido corretamente', player, 201, 73, 73)
+        else
+            outputChatBox('Não foi possível chamar a função! (parâmetro incorreto)', player, 201, 73, 73)
+        end
+    end
+)
+```
+## deleteGroup
+**Syntax**
+```lua
+exports['sqh_groups']:deleteGroup('number' groupID)
+```
+**Required arguments**
+-  _**groupID:**_ O id do grupo que será deletado
+
+**Example**
+```css
+[SERVER-SIDE]
+```
+O exemplo abaixo cria um comando que irá deletar o grupo 1
+```lua
+addCommandHandler( 'deletargrupo', -- Exemplo: /deletargrupo1 
+    function(player, _, groupID)
+        if (player) then
+            exports['sqh_groups']:deleteGroup(groupID)
+            outputChatBox('Grupo removido corretamente', player, 201, 73, 73)
+        else
+            outputChatBox('Não foi possível chamar a função! (parâmetro incorreto)', player, 201, 73, 73)
+        end
+    end
+)
+```
+## verifyGroup
+**Syntax**
+```lua
+exports['sqh_groups']:verifyGroup('number' groupID, 'boolean' value)
+```
+**Required arguments**
+-  _**groupID:**_ O id do grupo que será verificado
+-  _**value:**_ (true ou false), true para verificado e false para não verificado
+
+**Example**
+```css
+[SERVER-SIDE]
+```
+O exemplo abaixo cria um comando que irá verificar o grupo 1
+```lua
+addCommandHandler( 'verificargrupo', -- Exemplo: /verificargrupo 1
+    function(player, _, groupID)
+        if (player) then
+            exports['sqh_groups']:verifyGroup(groupID, true)
+            outputChatBox('Grupo verificado corretamente', player, 201, 73, 73)
+        else
+            outputChatBox('Não foi possível chamar a função! (parâmetro incorreto)', player, 201, 73, 73)
+        end
+    end
+)
+```
+## addPlayerToGroup
+**Syntax**
+```lua
+exports['sqh_groups']:addPlayerToGroup('number' groupID, 'player' theElement)
+```
+**Required arguments**
+-  _**groupID:**_ O id do grupo que o jogador entrará
+-  _**theElement:**_ O jogador que irá entrar no grupo
+
+**Example**
+```css
+[SERVER-SIDE]
+```
+O exemplo abaixo cria um comando que vai forçar a entrada do jogador no grupo 1
+```lua
+addCommandHandler( 'entrargrupo', -- Exemplo: /entrargrupo 1
+    function(player, _, groupID)
+        if (player) then
+            exports['sqh_groups']:addPlayerToGroup(groupID, player)
+            outputChatBox('Entrou no grupo corretamente', player, 201, 73, 73)
+        else
+            outputChatBox('Não foi possível chamar a função! (parâmetro incorreto)', player, 201, 73, 73)
+        end
+    end
+)
+```
+## removePlayerFromGroup
+**Syntax**
+```lua
+exports['sqh_groups']:removePlayerFromGroup('number' groupID, 'player' theElement)
+```
+**Required arguments**
+-  _**groupID:**_ O id do grupo que o jogador irá sair
+-  _**theElement:**_ O jogador que irá sair do grupo
+
+**Example**
+```css
+[SERVER-SIDE]
+```
+O exemplo abaixo cria um comando que vai forçar a saida do jogador no grupo 1
+```lua
+addCommandHandler( 'sairgrupo', -- Exemplo: /sairgrupo 1
+    function(player, _, groupID)
+        if (player) then
+            exports['sqh_groups']:removePlayerFromGroup(groupID, player)
+            outputChatBox('Saiu do grupo corretamente', player, 201, 73, 73)
+        else
+            outputChatBox('Não foi possível chamar a função! (parâmetro incorreto)', player, 201, 73, 73)
+        end
+    end
+)
+```
+## editGroupInfo
+**Syntax**
+```lua
+exports['sqh_groups']:editGroupInfo('number' groupID, 'string' info, 'string/boolean/number' value)
+```
+**Required arguments**
+-  _**groupID:**_ O id do grupo que será modificado
+-  _**info:**_ O tipo de modificação que será feita (nameGroup / membersLimit / descriptionGroup / visibilityGroup)
+-  _**value:**_ Novo valor da info
+
+**Example**
+```css
+[SERVER-SIDE]
+```
+O exemplo abaixo cria um comando que vai mudar a descrição do grupo 1 para "olá"
+```lua
+addCommandHandler( 'mudarinfo', -- Exemplo: /mudarinfo 1 descriptionGroup olá
+    function(player, _, groupID, info, value)
+        if (player) then
+            exports['sqh_groups']:editGroupInfo(groupID, info, value)
+            outputChatBox('Grupo editado corretamente', player, 201, 73, 73)
+        else
+            outputChatBox('Não foi possível chamar a função! (parâmetro incorreto)', player, 201, 73, 73)
+        end
+    end
+)
+```
+## playerHasPermission
+**Syntax**
+```lua
+exports['sqh_groups']:playerHasPermission('player' theElement, 'number' groupID, 'string' permissionName)
+```
+**Required arguments**
+-  _**theElement:**_ O jogador que você deseja verificar se tem tal permissão
+-  _**groupID:**_ O id do grupo que você quer verificar se tem tal permissão
+-  _**permissionName:**_ O nome da permissão que você quer verificar (accessCalendar, accessChat, manageRoles...)
+
+**Returns**
+- Retorna true caso o jogador tenha a permissão, false caso não tenha
+
+**Example**
+```css
+[SERVER-SIDE]
+```
+O exemplo abaixo cria um comando que verifica se o jogador tem a permissão para acessar o calendário
+```lua
+addCommandHandler( 'verperm', -- Exemplo: /verperm 1 accessCalendar
+    function(player, _, groupID, permission)
+        if (player) then
+            if (exports['sqh_groups']:playerHasPermission(player, groupID, permission)) then 
+                outputChatBox('Você possui permissão', player, 201, 73, 73)
+            else 
+                outputChatBox('Você não possui permissão', player, 201, 73, 73)
+            end
+        else
+            outputChatBox('Não foi possível chamar a função! (parâmetro incorreto)', player, 201, 73, 73)
+        end
+    end
+)
+```
+
+## getPlayerGroups
+**Syntax**
+```lua
+exports['sqh_groups']:getPlayerGroups('player' theElement)
+```
+**Required arguments**
+-  _**theElement:**_ O jogador que você quer retornar todos os grupos
+
+**Returns**
+- Retorna uma tabela contendo os grupos que o jogador está
+
+**Example**
+```css
+[SERVER-SIDE]
+```
+O exemplo abaixo cria um comando que irá retornar os grupos do jogador no debugscript
+```lua
+addCommandHandler( 'retornargrupos', -- Exemplo: /retornargrupos
+    function(player, _)
+        if (player) then
+            local grupos = exports['sqh_groups']:getPlayerGroups(player)
+            iprint(grupos)
+        else
+            outputChatBox('Não foi possível chamar a função! (parâmetro incorreto)', player, 201, 73, 73)
+        end
+    end
+)
+```
+
+
+<br />
+<br />
+<br />
+<br />
+<br />
+# Como configurar o resource? 
+

@@ -1,0 +1,240 @@
+---
+title: Phone System
+description: "Adquiriu o resource de celular e está com dúvidas do sistema? você está no lugar certo!"
+---
+
+<img
+  className="block dark:hidden"
+  src="/images/phone-system-banner.png"
+  alt="Hero Light"
+/>
+<img
+  className="hidden dark:block"
+  src="/images/phone-system-banner.png"
+  alt="Hero Dark"
+/>
+
+## Resolva problemas comuns
+
+<CardGroup cols={2}>
+  <Card
+    title="Resource não inicia"
+    icon="gear"
+    href="/pt/start"
+  >
+   Está com problemas para iniciar o seu produto? Clique aqui
+  </Card>
+    <Card
+    title="Configurar o resource"
+    icon="gear"
+    href="/pt/resources/phone-system#como-configurar-o-resource"
+  >
+   Está com dúvidas de como configurar algo no celular? Clique aqui
+  </Card>
+</CardGroup>
+
+
+<br />
+<br />
+# Funções Exportáveis
+
+- [buyPhone](#buyphone) --> `Compra um celular`
+- [openPhone](#openphone) --> `Abre um celular`
+- [managerWifiController](#managerwificontroller) --> `Gerencia as redes wifi`
+- [getPhoneNumberByID](#getphonenumberbyid) --> `Retorna o número do celular`
+- [removePhonePlayer](#removephoneplayer) --> `Remove a posse do celular de um jogador`
+
+
+
+
+
+
+## buyPhone
+**Syntax**
+```lua
+exports['sqh_phone']:buyPhone('ped' theElement)
+```
+**Required arguments**
+-  _**theElement:**_ Elemento que você irá setar a roupa (player)
+
+
+**Example**
+```css
+[SERVER-SIDE]
+```
+O exemplo abaixo cria um comando que permite o jogador comprar um celular
+```lua
+addCommandHandler( 'comprar', -- Exemplo: /comprar
+    function(player, command)
+        exports['sqh_phone']:buyPhone(player)
+        outputChatBox('Você comprou um celular!', player, 255, 255, 255)
+    end
+)
+```
+
+## openPhone
+**Syntax**
+```lua
+exports['sqh_phone']:openPhone('ped' theElement, 'number' phoneID)
+```
+**Required arguments**
+-  _**theElement:**_ Elemento que você irá setar a roupa (player)
+
+**Optional arguments**
+-  _**phoneID:**_ ID do celular que está abrindo
+
+
+**Example**
+```css
+[SERVER-SIDE]
+```
+O exemplo abaixo cria um comando que permite o jogador abrir um celular
+```lua
+addCommandHandler( 'abrircelular', -- Exemplo: /abrircelular 2
+    function(player, command, phoneID)
+        exports['sqh_phone']:openPhone(player, tonumber(phoneID))
+        outputChatBox('Você abriu um celular!', player, 255, 255, 255)
+    end
+)
+```
+
+## managerWifiController
+**Syntax**
+```lua
+exports['sqh_phone']:managerWifiController('table' argumentsTable)
+```
+**Required arguments**
+-  _**argumentsTable:**_ Tabela contendo as seguintes informações:
+        - **player:** Um elemento player que esteja no local que a rede será criada
+        - **type:** O tipo de gerenciamento do wifi (creationNetwork)
+        - **position:** A largura e comprimento da rede (width e height)
+        - **name:** Nome da rede wifi
+        - **password:** Senha da rede wifi
+        - **public:** Se a rede é pública ou não (true or false)
+
+
+
+
+
+**Example**
+```css
+[SERVER-SIDE]
+```
+O exemplo abaixo cria um comando que permite o jogador criar uma rede wifi
+```lua
+addCommandHandler("criarWifi", -- Exemplo: /criarWifi Praça
+    function(player, _, name)
+        if (name) then 
+            local posX, posY = getElementPosition(player)
+            local positionX = posX - (20 / 2)
+            local positionY = posY - (20 / 2)
+            local tableArguments = {player = player, name = name, password = password or '', public = false, position = {positionX = positionX, positionY = positionY, width = 20, height = 20}, type = 'creationNetwork'}
+            exports['sqh_phone']:managerWifiController(tableArguments)
+        end 
+    end 
+)
+```
+
+## getPhoneNumberByID
+**Syntax**
+```lua
+exports['sqh_phone']:getPhoneNumberByID('element' player, 'number' phoneID)
+```
+**Optional arguments**
+-  _**player:**_ Elemento player que você deseja pegar o número
+-  _**phoneID:**_ ID do celular que você deseja retornar o número
+
+**OBS:** Caso você passe somente o parâmetro player, ele irá identificar o primeiro celular do player, se ele tiver mais de um você terá que retornar pelo phoneID
+
+**Example**
+```css
+[SERVER-SIDE]
+```
+O exemplo abaixo cria um comando que permite o jogador ver seu número executando um comando
+```lua
+addCommandHandler("verNumero", -- Exemplo: /verNumero
+    function(player, _)
+        if (player) then 
+            local number = exports['sqh_phone']:getPhoneNumberByID(player)
+            outputChatBox(number, player, 255, 255, 255)
+        end 
+    end 
+)
+```
+
+
+## removePhonePlayer
+**Syntax**
+```lua
+exports['sqh_phone']:removePhonePlayer('element' player, 'number' phoneID)
+```
+**Optional arguments**
+-  _**player:**_ Elemento player que você deseja pegar o número
+-  _**phoneID:**_ ID do celular que você deseja retornar o número
+
+**OBS:** Caso você passe somente o parâmetro player, ele irá identificar o primeiro celular do player, se ele tiver mais de um você terá que retornar pelo phoneID
+
+**Example**
+```css
+[SERVER-SIDE]
+```
+O exemplo abaixo cria um comando que permite o jogador remover seu celular
+```lua
+addCommandHandler("remover", -- Exemplo: /verNumero
+    function(player, _)
+        if (player) then 
+            local number = exports['sqh_phone']:removePhonePlayer(player)
+            outputChatBox("Você removeu seu celular", player, 255, 255, 255)
+        end 
+    end 
+)
+```
+
+<br />
+<br />
+<br />
+<br />
+<br />
+# Como configurar o resource? 
+
+## Uber
+
+
+**Como adicionar mais carros para fazer uber?**
+```lua
+['carsAllowed'] = {[560] = true}, -- Todos carros que serão autorizados para o uber carro
+['bikesAllowed'] = {[522] = true}, -- Todas motos que serão autorizadas para o uber moto
+
+-- Você pode adicionar mais carros apenas replicando o que já está no arquivo de configuração, como no exemplo abaixo:
+
+['carsAllowed'] = {[560] = true, [422] = true, [433] = true, [444] = true},
+```
+**Como trocar o nome do veículo?**
+- Você pode seguir o exemplo abaixo caso não tenha nenhuma função exportável em outro script para retornar o nome do veículo
+```lua
+    getCarName = function(vehicle)
+        local vehiclesName = {
+            [422] = 'BMW M3',
+            [522] = 'Gol G6',
+            [233] = 'Ferrari',
+        }
+        return vehiclesName[getElementModel(vehicle)] or "Não identificado"
+    end,
+```
+
+## Maps
+
+```lua
+["localsConfig"] = {
+    [1] = {nameLocation = "Delegacia dos Policiais", mapPosition = {x = 1392, y = 247}, position = {width = 22, height = 22}, typeIcon = "fixed", id = 38},
+    [2] = {nameLocation = "Porto De Galinhas", mapPosition = {x = 2308, y = -849}, position = {width = 22, height = 22}, typeIcon = "fixed", id = 37},
+    [3] = {nameLocation = "Favela C.V", mapPosition = {x = 2900, y = -400}, position = {width = 22, height = 22}, typeIcon = "fixed", id = 37},
+},
+
+-- Basta você duplicar os itens e colocar a posição em mapPosition do mapa, ex:
+
+[4] = {nameLocation = "Agência Empregos", mapPosition = {x = 1500, y = -250}, position = {width = 22, height = 22}, typeIcon = "fixed", id = 37},
+-- Vocêp pode trocar o id do ícone, para descobrir quais ids tem, abra: assets/images/apps/maps/blips/
+```
+
+
