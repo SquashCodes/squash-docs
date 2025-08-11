@@ -43,9 +43,10 @@ description: "Adquiriu o resource de celular e está com dúvidas do sistema? vo
 - [managerWifiController](#managerwificontroller) --> `Gerencia as redes wifi`
 - [getPhoneNumberByID](#getphonenumberbyid) --> `Retorna o número do celular`
 - [removePhonePlayer](#removephoneplayer) --> `Remove a posse do celular de um jogador`
-
-
-
+- [instagramVerifyAccount](#instagramVerifyAccount) --> `Verificar uma conta no instagram`
+- [equipSpotifyJBL](#equipspotifyjbl) --> `Verificar uma conta no instagram`
+- [unEquipSpotifyJBL](#unequipspotifyjbl) --> `Verificar uma conta no instagram`
+- [dropSpotifyJBL](#dropspotifyjbl) --> `Verificar uma conta no instagram`
 
 
 
@@ -140,7 +141,7 @@ addCommandHandler("criarWifi", -- Exemplo: /criarWifi Praça
 ```lua
 exports['sqh_phone']:getPhoneNumberByID('element' player, 'number' phoneID)
 ```
-**Optional arguments**
+**Required arguments**
 -  _**player:**_ Elemento player que você deseja pegar o número
 -  _**phoneID:**_ ID do celular que você deseja retornar o número
 
@@ -168,8 +169,8 @@ addCommandHandler("verNumero", -- Exemplo: /verNumero
 ```lua
 exports['sqh_phone']:removePhonePlayer('element' player, 'number' phoneID)
 ```
-**Optional arguments**
--  _**player:**_ Elemento player que você deseja pegar o número
+**Required arguments**
+-  _**player:**_ Elemento player que você deseja remover o celular
 -  _**phoneID:**_ ID do celular que você deseja retornar o número
 
 **OBS:** Caso você passe somente o parâmetro player, ele irá identificar o primeiro celular do player, se ele tiver mais de um você terá que retornar pelo phoneID
@@ -185,6 +186,108 @@ addCommandHandler("remover", -- Exemplo: /verNumero
         if (player) then 
             local number = exports['sqh_phone']:removePhonePlayer(player)
             outputChatBox("Você removeu seu celular", player, 255, 255, 255)
+        end 
+    end 
+)
+```
+
+## instagramVerifyAccount
+**Syntax**
+```lua
+exports['sqh_phone']:instagramVerifyAccount('element' playerExecutor, 'number' accountID, 'boolean' value)
+```
+**Required arguments**
+-  _**player:**_ Elemento player que tem permissão para verificar conta
+-  _**accountID:**_ ID da conta do instagram que vai ser verificada
+-  _**value:**_ `true` para definir como verificado ou `false` para retirar o verificado
+
+
+**Example**
+```css
+[SERVER-SIDE]
+```
+O exemplo abaixo cria um comando que permite o jogador verificar uma conta do instagram
+```lua
+addCommandHandler("verificarConta", -- Exemplo: /verificarConta
+    function(player, _, accountID)
+        if (player) then 
+            local number = exports['sqh_phone']:instagramVerifyAccount(player, accountID, true)
+            outputChatBox("Você verificou essa conta", player, 255, 255, 255)
+        end 
+    end 
+)
+```
+
+## equipSpotifyJBL
+**Syntax**
+```lua
+exports['sqh_phone']:equipSpotifyJBL('element' player)
+```
+**Required arguments**
+-  _**player:**_ Elemento player que você deseja pegar o número
+
+
+**Example**
+```css
+[SERVER-SIDE]
+```
+O exemplo abaixo cria um comando que equipa uma JBL
+```lua
+addCommandHandler("equiparJBL", -- Exemplo: /equiparJBL
+    function(player, _)
+        if (player) then 
+            local number = exports['sqh_phone']:equipSpotifyJBL(player)
+            outputChatBox("Você equipou a JBL", player, 255, 255, 255)
+        end 
+    end 
+)
+```
+
+## unEquipSpotifyJBL
+**Syntax**
+```lua
+exports['sqh_phone']:unEquipSpotifyJBL('element' player)
+```
+**Required arguments**
+-  _**player:**_ Elemento player que você deseja pegar o número
+
+
+**Example**
+```css
+[SERVER-SIDE]
+```
+O exemplo abaixo cria um comando que remove a JBL
+```lua
+addCommandHandler("removerJBL", -- Exemplo: /removerJBL
+    function(player, _)
+        if (player) then 
+            local number = exports['sqh_phone']:unEquipSpotifyJBL(player)
+            outputChatBox("Você removeu a JBL", player, 255, 255, 255)
+        end 
+    end 
+)
+```
+
+## dropSpotifyJBL
+**Syntax**
+```lua
+exports['sqh_phone']:dropSpotifyJBL('element' player)
+```
+**Required arguments**
+-  _**player:**_ Elemento player que você deseja pegar o número
+
+
+**Example**
+```css
+[SERVER-SIDE]
+```
+O exemplo abaixo cria um comando que joga a JBL no chão
+```lua
+addCommandHandler("droparJBL", -- Exemplo: /droparJBL
+    function(player, _)
+        if (player) then 
+            local number = exports['sqh_phone']:dropSpotifyJBL(player)
+            outputChatBox("Você dropou a JBL", player, 255, 255, 255)
         end 
     end 
 )

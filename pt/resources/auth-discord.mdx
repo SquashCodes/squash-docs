@@ -1,0 +1,188 @@
+---
+title: AuthDiscord System
+description: "Adquiriu o resource de autenticação com o discord e está com dúvidas do sistema? você está no lugar certo!"
+---
+
+<img
+  className="block dark:hidden"
+  src="/images/auth-system-banner.png"
+  alt="Hero Light"
+/>
+<img
+  className="hidden dark:block"
+  src="/images/auth-system-banner.png"
+  alt="Hero Dark"
+/>
+
+## Resolva problemas comuns
+
+<CardGroup cols={2}>
+  <Card
+    title="Resource não inicia"
+    icon="gear"
+    href="/pt/start"
+  >
+   Está com problemas para iniciar o seu produto? Clique aqui
+  </Card>
+    <Card
+    title="Configurar o resource"
+    icon="gear"
+    href="/pt/resources/auth-discord#como-configurar-o-resource"
+  >
+   Está com dúvidas de como configurar algo no sistema? Clique aqui
+  </Card>
+</CardGroup>
+
+
+<br />
+<br />
+# Funções Exportáveis
+
+- [addRoleDiscordToPlayer](#addrolediscordtoplayer) --> `Adiciona um cargo no discord para um player`
+
+
+
+
+## addRoleDiscordToPlayer
+**Syntax**
+```lua
+exports['sqh_authdiscord']:addRoleDiscordToPlayer('ped' theElement, 'string' roleID)
+```
+**Required arguments**
+-  _**theElement:**_ Elemento que você irá setar o cargo (player)
+-  _**roleID:**_ ID do cargo que você deseja setar no discord (player)
+    - Clique aqui para ver como pegar o id do cargo
+
+**OBS:** Para setar um roleID, o bot deve estar com o cargo acima do cargo especificado
+
+**Example**
+```css
+[SERVER-SIDE]
+```
+O exemplo abaixo cria um comando que permite o jogador setar nele mesmo um cargo de recompensa
+```lua
+addCommandHandler( 'receberCargo', -- Exemplo: /receberCargo
+    function(player, command)
+        exports['sqh_authdiscord']:addRoleDiscordToPlayer(player, '771966112392544266')
+        outputChatBox('Você recebeu um cargo!', player, 255, 255, 255)
+    end
+)
+```
+
+
+<br />
+<br />
+# Como configurar o resource? 
+
+### BOT 
+
+Para que você tenha acesso ao nosso bot do discord, você precisa digitar /vincular [LICENÇA] em algum canal do nosso discord, ao executar esse comando, você irá receber a tag do sistema de autenticação, assim sendo liberado o seguinte canal:
+
+<img
+  src="/images/tutorial/auth-system/img-1.png"
+  alt="Hero Dark"
+/>
+**No canal acima, você irá procurar por "Discord-Login System"**
+
+Dentro do canal você vai encontrar a mensagem para configuração do bot e também o link de convite para o bot.
+
+<img
+  src="/images/tutorial/auth-system/img-2.png"
+  alt="Hero Dark"
+/>
+
+No botão acima, iremos configurar as informações principais do resource, veja após a imagem do que se trata cada configuração: 
+
+<img
+  src="/images/tutorial/auth-system/img-3.png"
+  alt="Hero Dark"
+/>
+
+-  _**Licença:**_ Licença do seu sistema de autenticação
+-  _**IP:**_ SERVIDOR_IP:PORTA 
+    - A porta que você deve colocar é a porta HTTP (ela aparece quando você inicia o servidor, ou no mtaserver.conf), como na imagem abaixo:
+    - <img src="/images/tutorial/auth-system/img-4.png" alt="HTTP Porta" />
+-  _**Senha:**_ A senha é a senha da conta com httppass, você deve realizar o seguinte procedimento: 
+    - Va até a config do seu produto, e procure pela parte da imagem abaixo: 
+    - <img src="/images/tutorial/auth-system/img-5.png" alt="Configuração HTTP Password" />
+    - Troque a opção marcada na imagem para **true**
+    - Entre no servidor e digite **/vernomedaconta**, após digitar, será copiado para sua área de transferência (cntrl + c) o nome da conta
+    - Agora que você já tem o nome da conta copiado digite no F8 **/authserial ]nome_da_conta_copiado] httppass**
+    - Pegue a senha que foi informada para você e coloque no bot 
+    - **COLOQUE A OPÇÃO MARCADA PARA FALSE** **IMPORTANTÍSSIMO!!!**
+-  _**Vincular nome do discord ao jogo:**_ Essa opção é para caso o jogador mude o nome dele no discord seja alterado no servidor também
+-  _**Formato de ID**_ Aqui é o formato do id
+    - Exemplo: você quer que seu nome fique `{1} - Squash`, então você vai colocar o que vem antes do ID nas primeiras aspas: `"{"`, na segunda aspas você vai colocar tudo que vem depois do id e antes do nome do jogador, no caso do exemplo: `"} - "`, ficando `"{", "} - "`
+
+<img
+  src="/images/tutorial/auth-system/img-6.png"
+  alt="Hero Dark"
+/>
+
+No botão acima, iremos configurar as informações principais do discord, veja após a imagem do que se trata cada configuração: 
+
+<img
+  src="/images/tutorial/auth-system/img-7.png"
+  alt="Hero Dark"
+/>
+
+-  _**ID do servidor:**_ Aqui você deve colocar o id que o seu bot entrará (passo **MUITO** importante, se você não colocar o id aqui, o bot será retirado automaticamente do seu servidor)
+    - Para pegar o id, basta clicar com o botão direito no seu servidor na aba lateral do discord e ir até a opção **Copiar ID do servidor**
+    - <img src="/images/tutorial/auth-system/img-8.png" alt="Configuração HTTP Password" />
+
+-  _**ID do canal:**_ Aqui você deve preencher o ID do canal que será enviada a mensagem para que os jogadores possam fazer a liberação
+    - Para pegar o id, basta clicar com o botão direito no seu canal e procurar por **Copiar ID do canal**
+
+-  _**Jogador digitar o nome**_ Essa opção é para caso você queira que o jogador digite o nome no cadastro para liberação (no discord)
+
+-  _**Log de Criações de conta**_ Aqui você deve preencher o ID do canal que será enviada a mensagem quando um jogador fizer a liberação, **OBS: Essa opção é opcional, você não precisa ter um canal de log's caso não queira**
+    - Para pegar o id, basta clicar com o botão direito no seu canal e procurar por **Copiar ID do canal**
+
+**CONSIDERAÇÕES SOBRE O BOT**
+- O bot não vai conseguir alterar nome de jogadores que tenham um cargo maior que o dele, então se você for o dono provavelmente você tenha alguns problemas com o nome
+- O bot não vai conseguir setar cargo em jogadores que tenha um cargo maior que o dele, talvez ele não sete os cargos em você
+
+
+### SISTEMA
+
+Agora que você já configurou seu BOT, você pode querer configurar seu sistema no jogo, então vamos lá:
+
+```lua
+    onPlayerJoin = true, 
+```
+Se a opção acima for **true**, quando o jogador entrar no servidor o painel já irá aparecer. Caso você queira colocar para o painel aparecer por exemplo após um LOGIN, após uma whitelist coloque como **false** e chame nossa função exportável **verifyPlayerAccount**
+
+```lua
+createAccountMTA = true, 
+```
+A opção acima serve para se você for utilizar a criação de contas através do nosso sistema, caso você for usar seu próprio login troque para **false**
+
+```lua
+playerInDiscord = true, 
+```
+A opção acima serve para forçar que o jogador deva estar dentro do discord para continuar jogando, caso seja **true** se o jogador entrar (após o registro) e não estiver no discord ele vai ficar em aguardo até entrar
+
+```lua
+    discordInfos = {
+        onRegisterSetOffices = {
+            '1369157648141910046',
+            '1369157691162755112'
+        } -- Todos os cargos que estiverem na tabela acima serão setados no jogador quando a conta for liberada.
+    },
+```
+Na tabela acima, você deve colocar todos os cargos que o jogador deve receber ao se registrar pela primeira vez, você pode colocar quantos quiser apenas seguindo o exemplo acima
+
+```lua
+    infosPlayer = {
+        getNameOption = 'Discord', 
+    }
+```
+
+Na opção acima, você terá 3 opções para escolher:
+- **Game** -> O nome do jogo vai ser utilizado para mudar o nome do discord (o nome será identificado pela função getNamePlayerFunction)
+- **Discord** -> O nome do discord do jogador que está cadastrando será vinculado ao jogo
+- **DiscordDigit** -> O nome do discord será o nome digitado no input do discord
+
+
+**CONSIDERAÇÕES SOBRE O SISTEMA**
+- Muito possivelmente o seu sistema não irá funcionar em um servidor local por acessar a API do MTA, a não ser que você abra as portas do seu roteador para tentar.

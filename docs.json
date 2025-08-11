@@ -132,7 +132,16 @@
               "pt/resources/phone-system",
               "pt/resources/custom-characters",
               "pt/resources/group-system",
-              "pt/resources/accounts"
+              "pt/resources/accounts",
+              "pt/resources/auth-discord"
+            ]
+          },
+          {
+            "group": "Proteção",
+            "pages": [
+              "pt/protection/overview",
+              "pt/protection/modules",
+              "pt/protection/install"
             ]
           }
         ]
@@ -151,6 +160,14 @@
               "en/resources/custom-characters",
               "en/resources/group-system",
               "en/resources/accounts"
+            ]
+          },
+          {
+            "group": "Protection",
+            "pages": [
+              "en/protection/overview",
+              "en/protection/modules",
+              "en/protection/install"
             ]
           }
         ]

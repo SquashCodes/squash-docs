@@ -1,34 +1,34 @@
 ---
-title: Configuração Inicial
-description: "Comprou seu primeiro resource e não sabe como ligar o resource? veja agora."
+title: Initial Setup
+description: "Bought your first resource and don't know how to start it? Here's how."
 ---
 
-Esse passo deve ser repetido para TODOS os produtos da sua conta, você precisa configurar todos da mesma maneira, inclusive colocar o ip em cada um no SITE.
+This step must be repeated for **ALL** products in your account. You need to configure each one the same way, including setting the IP for each on the WEBSITE.
 
+- [Video Tutorial](#video-tutorial) → `See how to start the resource with a video guide`  
+- [Text Tutorial](#text-tutorial) → `Step-by-step instructions to start the resource in text form`  
+- [Common Errors](#common-errors) → `See how to fix common issues when starting the resource`
 
-- [Tutorial Em Vídeo](#tutorial-em-video) --> `Veja como ligar o resource através de um vídeo`
-- [Tutorial Em Texto](#tutorial-em-texto) --> `Veja como ligar o resource passo a passo de maneira escrita`
-- [Erros comuns](#erros-comuns) --> `Veja como resolver possíveis erros ao iniciar o resource`
+# Video Tutorial
 
-
-# Tutorial Em vídeo
 <video width="100%" height="400" controls>
   <source src="/videos/tutorial.mp4" type="video/mp4" />
-  Seu navegador não suporta o elemento de vídeo.
+  Your browser does not support the video element.
 </video>
 
-# Tutorial Em Texto
+# Text Tutorial
 
-## Passo 1
+## Step 1
 
-A primeira coisa que você deve fazer é acessar nosso [SITE](https://www.squashcodes.com) e entrar na sua conta clicando em **"Área do Cliente"** no canto superior direito, após isso você deverá acessar as **configurações** da sua conta que fica no canto superior direito, como na imagem abaixo:
+The first thing you should do is go to our [WEBSITE](https://www.squashcodes.com) and log into your account by clicking **"Client Area"** in the upper right corner. Then, go to the **account settings** in the same corner, as shown below:
+
 <img
   className=""
   src="/images/tutorial/tutorial_1.png"
   alt="Hero Dark"
 />
 
-Após isso, você deverá procurar por **Gerenciar licenças**, essa opção fica um pouco abaixo do nome da sua conta, como no exemplo abaixo:
+Next, look for **Manage Licenses** — this option is located just below your account name, as shown here:
 
 <img
   className=""
@@ -36,7 +36,7 @@ Após isso, você deverá procurar por **Gerenciar licenças**, essa opção fic
   alt="Hero Dark"
 />
 
-Após isso você terá um painel com todas suas licenças, você deverá escolher o produto que você deseja alterar o IP e vai colocar o IP no campo demonstrado abaixo:
+You will now see a panel with all your licenses. Choose the product you want to assign an IP to and enter it in the field shown below:
 
 <img
   className=""
@@ -44,10 +44,10 @@ Após isso você terá um painel com todas suas licenças, você deverá escolhe
   alt="Hero Dark"
 />
 
-### Como pegar o IP?
+### How to get the IP?
 
-#### Host
-Basta você entrar no seu MTA, escolher o seu servidor na lista de servidores e copiar o IP que fica logo acima, como demonstrado abaixo:
+#### Hosted Server  
+Just open your MTA, select your server from the server list, and copy the IP shown at the top, as in the example below:
 
 <img
   className=""
@@ -55,17 +55,16 @@ Basta você entrar no seu MTA, escolher o seu servidor na lista de servidores e 
   alt="Hero Dark"
 />
 
-#### Servidor Local
-Você terá que entrar nesse [SITE](https://www.squashcodes.com), após entrar você vai copiar o IP que aparecer, depois você vai no seu MTA e pega a porta, então o passo é simples:
+#### Local Server  
+Go to this [WEBSITE](https://www.squashcodes.com), copy the IP shown there, then get the port from your MTA. The final format will be:
 
-IP DO SITE:PORTA DO MTA
+SITE IP:MTA PORT
 
+## Step 2
 
-## Passo 2
+Now that you've added your IP on the site, it’s time to configure it inside the script. Stay in the **MANAGE LICENSES** panel.
 
-Agora que você já colocou o seu IP no site, você deverá fazer a configuração dentro do script, para isso continue no mesmo painel de **GERENCIAR LICENÇAS**
-
-Abra o arquivo de configuração do seu produto, normalmente dentro de uma pasta chamada "config" com o nome "main.lua" ou "config.lua", a primeira linha deverá ser assim:
+Open the configuration file of your product, usually located inside a folder called `config`, named `main.lua` or `config.lua`. The first line should look like this:
 
 ```lua
 license = {
@@ -74,7 +73,7 @@ license = {
 }
 ```
 
-Agora basta você preencher as informações DENTRO das aspas "", a KEY você deverá pegar no site do GERENCIAR LICENÇAS, como no exemplo abaixo:
+Now fill in the fields **inside the quotes** `""`. You can get the KEY from the **MANAGE LICENSES** page on the website, as shown below:
 
 <img
   className=""
@@ -82,7 +81,7 @@ Agora basta você preencher as informações DENTRO das aspas "", a KEY você de
   alt="Hero Dark"
 />
 
-Por fim, seu arquivo de configuração deverá ficar da seguinte forma:
+Your final config file should look like this:
 
 ```lua
 license = {
@@ -91,22 +90,19 @@ license = {
 }
 ```
 
-Caso mesmo assim o seu produto não inicie corretamente, recomendamos que você abra um ticket em nosso canal do [discord](https://discord.gg/XFfKTDF3ak) para que possamos auxiliar da melhor forma
+If your product still doesn't start properly, we recommend that you open a ticket in our [Discord](https://discord.gg/XFfKTDF3ak) channel so we can assist you in the best way.
 
-
-# Erros comuns
-
+# Common Errors
 
 #### getServerIpFromMasterServer
+
 ```
 attempt to call global 'getServerIpFromMasterServer' (a nil value)
 ```
-Caso apareça esse erro ao ligar um de nossos produtos, você deve atualizar o seu servidor do MTA para a ultima versão, ou qualquer versão acima de: **1.6.0 r22890**
 
-**Porque esse erro acontece?**
-Essa função é uma função extremamente nova no MTA, então é possível que seu servidor ainda não esteja atualizado para recebê-la.
+If this error appears when starting one of our products, you need to update your MTA server to the latest version, or any version **above 1.6.0 r22890**.
 
-### Caso você não saiba como atualizar, entre em contato com sua HOSPEDAGEM para que eles atualizem para você.
+**Why does this error occur?**  
+This function is a very recent addition to MTA, so your server may not yet be updated to support it.
 
-
-
+### If you don’t know how to update, contact your HOSTING PROVIDER and ask them to update it for you.

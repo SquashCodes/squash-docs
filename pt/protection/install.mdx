@@ -1,0 +1,86 @@
+---
+title: Instalação
+description: Veja como instalar o módulo de proteção Squash no seu servidor MTA.
+---
+
+# Instalação do Squash Vulcan
+
+Abaixo você encontra o guia de instalação do módulo de proteção **Squash Vulcan**, separado por sistema operacional:
+
+<Tabs>
+
+<Tab title="Windows">
+
+<Steps>
+  <Step title="Baixe o módulo">
+    Acesse a página de [Downloads](/pt/protection/modules) e selecione a versão **Windows x64** ou **x86**, conforme a arquitetura do seu servidor.
+  </Step>
+
+  <Step title="Mova o arquivo para o diretório correto">
+    Após o download, coloque o módulo na pasta específica:
+
+    - **x64:** <code>/x64/modules</code>  
+    - **x86:** <code>/mods/deathmatch/modules</code>
+
+    <Info>Se a pasta <code>modules</code> não existir, você pode criá-la manualmente.</Info>
+  </Step>
+
+  <Step title="Configure o mtaserver.conf">
+    Abra o arquivo <code>mtaserver.conf</code> e adicione a seguinte linha:
+
+    <CodeGroup>
+    ```xml mtaserver.conf
+    <module src="squash_vulcan.dll" />
+    ```
+    </CodeGroup>
+
+    <Info>O nome do arquivo deve ser idêntico ao baixado. Nomes diferentes impedem o carregamento do módulo.</Info>
+  </Step>
+
+  <Step title="Reinicie o servidor">
+    Finalize reiniciando o servidor MTA para aplicar a proteção.
+  </Step>
+</Steps>
+
+</Tab>
+
+<Tab title="Linux" icon="linux">
+
+<Steps>
+  <Step title="Baixe o módulo">
+    Acesse a página de [Downloads](/pt/protection/modules) e selecione a versão **Linux x64** ou **x86**, conforme a arquitetura do seu servidor.
+  </Step>
+
+  <Step title="Mova o arquivo para o diretório correto">
+    Após o download, coloque o módulo na pasta apropriada:
+
+    - **x64:** <code>/x64/modules</code>  
+    - **x86:** <code>/mods/deathmatch/modules</code>
+
+    <Info>Se a pasta <code>modules</code> não existir, você pode criá-la manualmente.</Info>
+  </Step>
+
+  <Step title="Configure o mtaserver.conf">
+    Adicione a linha abaixo no arquivo <code>mtaserver.conf</code>:
+
+    <CodeGroup>
+    ```xml mtaserver.conf
+    <module src="squash_vulcan.so" />
+    ```
+    </CodeGroup>
+
+    <Info>O nome do arquivo deve ser exatamente igual ao baixado. Caso contrário, o módulo não será carregado.</Info>
+  </Step>
+
+  <Step title="Reinicie o servidor">
+    Após configurar, reinicie o servidor MTA para ativar o Squash Vulcan.
+  </Step>
+</Steps>
+
+</Tab>
+
+</Tabs>
+
+<Info>
+Se tiver qualquer problema durante a instalação, acesse nossa [página de suporte](/company/support) ou entre em contato pelo Discord.
+</Info>
