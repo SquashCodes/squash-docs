@@ -133,7 +133,14 @@
               "pt/resources/custom-characters",
               "pt/resources/group-system",
               "pt/resources/accounts",
-              "pt/resources/auth-discord"
+              "pt/resources/auth-discord",
+              {
+                "group": "Radar System",
+                "pages": [
+                  "pt/resources/radar-system/exports",
+                  "pt/resources/radar-system/settings"
+                ]
+              }
             ]
           },
           {

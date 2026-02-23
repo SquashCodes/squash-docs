@@ -1,0 +1,328 @@
+---
+title: Exports Radar System
+description: "Adquiriu o Radar System e está com dúvidas do sistema? você está no lugar certo!"
+---
+
+<img
+  src="/images/radar-system.png"
+  alt="Hero Dark"
+/>
+
+## Resolva problemas comuns
+
+<CardGroup cols={2}>
+  <Card
+    title="Resource não inicia"
+    icon="gear"
+    href="/pt/start"
+  >
+   Está com problemas para iniciar o seu produto? Clique aqui
+  </Card>
+    <Card
+    title="Configurar o resource"
+    icon="gear"
+    href="/pt/resources/auth-discord#como-configurar-o-resource"
+  >
+   Está com dúvidas de como configurar algo no sistema? Clique aqui
+  </Card>
+</CardGroup>
+
+<img
+  src="/images/ashy-help.png"
+  alt="Hero Dark"
+/>
+
+## Sobre o sistema
+A proposta do Radar system é unir performance, personalização e controle total.
+O jogador tem liberdade para configurar o mapa do jeito que quiser, e o dono do servidor tem poder absoluto para definir o padrão, limitar opções e integrar com outros sistemas.
+
+Com as funções exportadas, você pode:
+- Controlar a visualização da minimap e bigmap;
+- Criar rotas personalizadas no GPS (útil para sistemas com rotas de entrega, empregos, missões, etc.);
+- Criar zonas dinâmicas no radar/bigmap, com opções de renderização, ícones personalizados e cores (ótimo para demarcar safe zones, territórios, zonas de perigo, etc.);
+- E muito mais, com a flexibilidade de integrar essas funcionalidades em outros sistemas.
+
+## Funções Exportadas
+
+### Client-side
+
+- [changeMinimapVisualization](#changeminimapvisualization) -> `Liga ou desliga a minimap`
+- [changeBigmapVisualization](#changebigmapvisualization) -> `Abre ou fecha o bigmap`
+- [createGPSRoute](#creategpsroute) -> `Cria/atualiza destino do GPS para o jogador`
+
+### Server-side
+
+- [changeMinimapVisualization](#changeminimapvisualization) -> `Liga ou desliga a minimap para um player`
+- [changeBigmapVisualization](#changebigmapvisualization) -> `Abre ou fecha o bigmap para um player`
+- [createRadarZone](#createradarzone) -> `Cria uma zona dinâmica no radar/bigmap`
+- [removeRadarZone](#removeradarzone) -> `Remove uma zona dinâmica`
+- [getRadarZones](#getradarzones) -> `Retorna todas as zonas dinâmicas`
+
+
+## changeMinimapVisualization
+
+**Side:** `client` e `server`
+
+**Client syntax**
+```lua
+exports['sqh_radar']:changeMinimapVisualization('on' or 'off')
+```
+
+**Server syntax**
+```lua
+exports['sqh_radar']:changeMinimapVisualization(player, 'on' or 'off')
+```
+
+**Required arguments**
+- `state` (`string`): `'on'` para ligar ou `'off'` para desligar.
+
+**Server required arguments**
+- `player` (`player`): jogador alvo que terá a minimap ligada/desligada.
+- `state` (`string`): `'on'` para ligar ou `'off'` para desligar.
+
+**Return (server)**
+- `true` em sucesso.
+- `false` em falha (player inválido, estado inválido, ou cliente ainda não liberado).
+
+**Example**
+```lua
+-- CLIENT-SIDE
+bindKey('F7', 'down', function()
+    exports['sqh_radar']:changeMinimapVisualization('off')
+end)
+```
+
+```lua
+-- SERVER-SIDE
+addCommandHandler('minimapoff', function(player)
+    local ok = exports['sqh_radar']:changeMinimapVisualization(player, 'off')
+    outputChatBox(ok and 'Minimap desligada' or 'Falha ao desligar minimap', player)
+end)
+```
+
+
+## changeBigmapVisualization
+
+**Side:** `client` e `server`
+
+**Client syntax**
+```lua
+exports['sqh_radar']:changeBigmapVisualization('on' or 'off')
+```
+
+**Server syntax**
+```lua
+exports['sqh_radar']:changeBigmapVisualization(player, 'on' or 'off')
+```
+
+**Required arguments**
+- `state` (`string`): `'on'` para abrir ou `'off'` para fechar.
+
+**Server required arguments**
+- `player` (`player`): jogador alvo que terá o bigmap alterado.
+- `state` (`string`): `'on'` para abrir ou `'off'` para fechar.
+
+**Comportamento**
+- Em `'on'`, abre o bigmap com fluxo completo (cursor, navegação e render).
+- Em `'off'`, fecha o bigmap caso esteja aberto.
+
+**Return (server)**
+- `true` em sucesso.
+- `false` em falha (player inválido, estado inválido, ou cliente ainda não liberado).
+
+**Example**
+```lua
+-- CLIENT-SIDE
+addCommandHandler('bigmapoff', function()
+    exports['sqh_radar']:changeBigmapVisualization('off')
+end)
+```
+
+```lua
+-- SERVER-SIDE
+addCommandHandler('bloquearmapa', function(player)
+    local ok = exports['sqh_radar']:changeBigmapVisualization(player, 'off')
+    outputChatBox(ok and 'Bigmap fechado' or 'Falha ao fechar bigmap', player)
+end)
+```
+
+
+## createGPSRoute
+**Side:** `client` e `server`
+
+**Client syntax**
+```lua
+exports['sqh_radar']:createGPSRoute(player, x, y, z)
+```
+
+**Server syntax**
+```lua
+exports['sqh_radar']:createGPSRoute(player, x, y, z)
+```
+
+**Required arguments**
+- `player` (`player`)
+  - No client: deve ser o `localPlayer`.
+  - No server: player alvo que receberá a rota.
+- `x` (`number`): coordenada X do destino.
+- `y` (`number`): coordenada Y do destino.
+
+**Optional arguments**
+- `z` (`number`): coordenada Z do destino (padrão `0`).
+
+**Return**
+- `true` quando a rota é criada/atualizada.
+- `false` em falha (principalmente no server: player inválido ou coordenadas inválidas).
+
+**Client example**
+```lua
+-- CLIENT-SIDE
+addCommandHandler('rotacasa', function()
+    local created = exports['sqh_radar']:createGPSRoute(localPlayer, 1480.25, -1732.80, 13.55)
+    outputChatBox(created and 'Rota criada/atualizada' or 'Falha ao criar rota')
+end)
+```
+
+**Server example**
+```lua
+-- SERVER-SIDE
+addCommandHandler('setrota', function(player)
+    local success = exports['sqh_radar']:createGPSRoute(player, 1480.25, -1732.80, 13.55)
+    outputChatBox(success and 'Rota enviada para você' or 'Falha ao enviar rota', player)
+end)
+```
+
+
+## createRadarZone
+
+**Side:** `server`
+
+**Syntax**
+```lua
+local zoneIdOrFalse = exports['sqh_radar']:createRadarZone(zoneData)
+```
+
+**Required arguments**
+- `zoneData` (`table`) com campos obrigatórios:
+  - `id` (`string`)
+  - `x` (`number`)
+  - `y` (`number`)
+  - `width` (`number > 0`)
+  - `height` (`number > 0`)
+
+**Optional fields**
+- `name` (`string`) - padrão: `id`
+- `owner` (`string`)
+- `renderMode` (`'name'` ou `'blip'`)
+- `blipId` (`number`)
+- `blip` (`number`) (alias de `blipId`)
+- `color` (`'#RRGGBB'`)
+- `icon` (`string`) caminho de ícone
+
+**Return**
+- `string` com o ID normalizado da zona em sucesso.
+- `false` em falha.
+
+**Example**
+```lua
+-- SERVER-SIDE
+addCommandHandler('criarzona', function(player)
+    local px, py = getElementPosition(player)
+
+    local zoneId = exports['sqh_radar']:createRadarZone({
+        id = 'zona_evento',
+        name = 'Zona de Evento',
+        owner = 'Administração',
+        x = px - 25,
+        y = py - 25,
+        width = 50,
+        height = 50,
+        renderMode = 'blip',
+        blipId = 41,
+        color = '#E13B3B'
+    })
+
+    outputChatBox(zoneId and ('Zona criada: ' .. zoneId) or 'Falha ao criar zona', player)
+end)
+```
+
+
+## removeRadarZone
+
+**Side:** `server`
+
+**Syntax**
+```lua
+local success = exports['sqh_radar']:removeRadarZone(zoneId)
+```
+
+**Required arguments**
+- `zoneId` (`string`): ID da zona a remover.
+
+**Return**
+- `true` se removeu.
+- `false` se não encontrou ou falhou.
+
+**Example**
+```lua
+-- SERVER-SIDE
+addCommandHandler('removerzona', function(player, _, zoneId)
+    if not zoneId then
+        outputChatBox('Use: /removerzona <id>', player)
+        return
+    end
+
+    local success = exports['sqh_radar']:removeRadarZone(zoneId)
+    outputChatBox(success and 'Zona removida' or 'Zona não encontrada', player)
+end)
+```
+
+
+## getRadarZones
+
+**Side:** `server`
+
+**Syntax**
+```lua
+local zones = exports['sqh_radar']:getRadarZones()
+```
+
+**Return**
+- `table` de zonas dinâmicas no formato:
+```lua
+{
+    {
+        id = 'zona_id',
+        name = 'Nome',
+        owner = 'Owner',
+        icon = 'assets/blips/41.png',
+        renderMode = 'name' or 'blip',
+        blipId = 41,
+        color = '#81B3FF',
+        x = 1000,
+        y = -1200,
+        width = 40,
+        height = 40
+    },
+    ...
+}
+```
+
+**Example**
+```lua
+-- SERVER-SIDE
+addCommandHandler('listarzonas', function(player)
+    local zones = exports['sqh_radar']:getRadarZones() or {}
+    outputChatBox('Total de zonas: ' .. tostring(#zones), player)
+
+    for _, zone in ipairs(zones) do
+        outputChatBox(string.format('- %s (%s)', tostring(zone.name), tostring(zone.id)), player)
+    end
+end)
+```
+
+
+## Observações
+
+- Todas as exports exigem que o resource já tenha sido liberado pela proteção.
+- As funções acima seguem o que está exportado no `meta.xml` do `sqh_radar`.

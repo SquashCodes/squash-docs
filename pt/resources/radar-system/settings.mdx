@@ -1,0 +1,388 @@
+---
+title: Configurações Radar System
+description: "Guia completo do config/settings.lua do Radar System."
+---
+<img
+  src="/images/radar-system.png"
+  alt="Hero Dark"
+/>
+
+## Resolva problemas comuns
+
+<CardGroup cols={2}>
+  <Card
+    title="Resource não inicia"
+    icon="gear"
+    href="/pt/start"
+  >
+   Está com problemas para iniciar o seu produto? Clique aqui
+  </Card>
+    <Card
+    title="Configurar o resource"
+    icon="gear"
+    href="/pt/resources/auth-discord#como-configurar-o-resource"
+  >
+   Está com dúvidas de como configurar algo no sistema? Clique aqui
+  </Card>
+</CardGroup>
+
+<img
+  src="/images/ashy-help.png"
+  alt="Hero Dark"
+/>
+
+## Sobre o sistema
+A proposta do Radar system é unir performance, personalização e controle total.
+O jogador tem liberdade para configurar o mapa do jeito que quiser, e o dono do servidor tem poder absoluto para definir o padrão, limitar opções e integrar com outros sistemas.
+
+Com as funções exportadas, você pode:
+- Controlar a visualização da minimap e bigmap;
+- Criar rotas personalizadas no GPS (útil para sistemas com rotas de entrega, empregos, missões, etc.);
+- Criar zonas dinâmicas no radar/bigmap, com opções de renderização, ícones personalizados e cores (ótimo para demarcar safe zones, territórios, zonas de perigo, etc.);
+- E muito mais, com a flexibilidade de integrar essas funcionalidades em outros sistemas.
+
+## Visão Geral
+
+Este guia cobre **todo o arquivo** `config/settings.lua`.
+
+Objetivo:
+- Você entender exatamente o que cada opção muda.
+- Você saber quando usar `true` ou `false`.
+- Você configurar o radar sem precisar entrar em detalhes técnicos.
+
+## Antes de Começar
+
+- Arquivo de configuração: `config/settings.lua`
+- Depois de alterar a config: reinicie o resource (`restart sqh_radar`)
+- Regra geral:
+  - `true` = ativa a função
+  - `false` = desativa a função
+
+---
+
+## 1) `Config.Map`
+
+Controla tamanho e imagens do mapa.
+
+| Opção | O que muda |
+|---|---|
+| `textureSize` | Define o tamanho base da textura do mapa. |
+| `textureSizeByTheme.default.w/h` | Tamanho do mapa no tema padrão. |
+| `textureSizeByTheme.default.preview` | Imagem de preview do tema padrão. |
+| `textureSizeByTheme.light.w/h` | Tamanho do mapa no tema claro. |
+| `textureSizeByTheme.light.preview` | Imagem de preview do tema claro. |
+| `textureSizeByTheme.dark.w/h` | Tamanho do mapa no tema escuro. |
+| `textureSizeByTheme.dark.preview` | Imagem de preview do tema escuro. |
+| `worldSize` | Tamanho do mundo usado pelo radar. |
+
+---
+
+## 2) `Config.Callbacks`
+
+Ações executadas quando o mapa abre/fecha e quando a rota termina.
+
+| Callback | Quando acontece | Exemplo de uso |
+|---|---|---|
+| `onMapOpen` | Quando o mapa grande abre | Esconder chat/HUD |
+| `onMapClose` | Quando o mapa grande fecha | Reexibir chat/HUD |
+| `onRouteComplete` | Quando rota é concluída | Tocar som, aviso etc |
+
+Exemplo simples:
+
+```lua
+onMapOpen = function()
+    showChat(false)
+end,
+
+onMapClose = function()
+    showChat(true)
+end
+```
+
+---
+
+## 3) `Config.FullMap`
+
+Configura o mapa grande (bigmap).
+
+### `keybinds`
+
+| Opção | O que muda |
+|---|---|
+| `toggle` | Tecla para abrir/fechar o mapa grande. |
+| `mark` | Tecla para marcar destino no mapa. |
+
+### `ui`
+
+| Opção | O que muda |
+|---|---|
+| `accentColor` | Cor principal da interface do mapa grande. |
+
+### `hints`
+
+Lista de dicas exibidas no rodapé do mapa.
+
+Campos por item:
+- `type`: tipo da dica (`mouse_left`, `mouse_right`, `mouse_middle`, `arrows`, `keycap`)
+- `icon`: ícone (quando aplicável)
+- `key`: tecla exibida no keycap (quando `type = 'keycap'`)
+- `action`: texto da ação
+
+### `categories`
+
+Define categorias e filtros de blips no mapa.
+
+Campos da categoria:
+- `title`: nome da categoria
+
+Campos de cada item:
+- `title`: nome do filtro
+- `icon`: ID do ícone
+- `blip_ids`: IDs de blip que esse filtro controla
+- `state`: estado inicial
+  - `true`: começa ligado
+  - `false`: começa desligado
+
+---
+
+## 4) `Config.Radar`
+
+Configura o minimapa (radar pequeno).
+
+### `appearance`
+
+| Opção | O que muda |
+|---|---|
+| `cornerRadius` | Arredondamento do minimapa |
+| `zoomFactor` | Nível de zoom |
+| `margin` | Distância das bordas da tela |
+| `waterColor` | Cor da água no minimapa (`{R, G, B}`) |
+| `outline` | Cor da borda do minimapa |
+
+### `route`
+
+| Opção | O que muda |
+|---|---|
+| `lineWidth` | Espessura da linha da rota |
+| `lineColor` | Cor da linha da rota |
+
+### `visibility`
+
+| Opção | `true` | `false` |
+|---|---|---|
+| `requireVehicle` | Radar só aparece no veículo | Radar pode aparecer fora do veículo |
+| `requireAccountLogin` | Radar só aparece após login na conta | Radar pode aparecer sem login |
+
+---
+
+## 5) `Config.Permissions`
+
+Permissões de ações administrativas.
+
+### `actions.teleport`
+
+| Opção | `true` | `false` |
+|---|---|---|
+| `enabled` | Ativa teleport no mapa para quem tem permissão | Desativa teleport |
+
+`aclGroups`: lista de grupos ACL autorizados.
+
+### `actions.administration`
+
+| Opção | `true` | `false` |
+|---|---|---|
+| `enabled` | Ativa funções administrativas do mapa | Desativa funções administrativas |
+
+`aclGroups`: lista de grupos ACL autorizados.
+
+---
+
+## 6) `Config.Administration`
+
+Configura recursos de administração no mapa.
+
+| Opção | `true` | `false` |
+|---|---|---|
+| `viewPlayersOnMap` | Mostra players no mapa para administração | Não mostra players |
+| `markPvpZones` | Mostra marcação de zonas de PVP | Não mostra marcação de PVP |
+
+`playerUpdateIntervalSeconds`:
+- Valores recomendados: `1`, `10` ou `30`
+- Menor valor = atualização mais rápida
+
+---
+
+## 7) `Config.CommonGroups`
+
+Sistema de grupos compartilhados (ex.: polícia em serviço).
+
+| Opção | `true` | `false` |
+|---|---|---|
+| `enabled` | Liga o sistema de grupos compartilhados | Desliga o sistema |
+| `allowMapView` | Permite ver membros do mesmo grupo no mapa | Não mostra membros no mapa |
+
+`syncIntervalSeconds`:
+- Tempo de atualização dos grupos.
+
+### `groups`
+
+Cada grupo aceita:
+- `id`: identificador interno único
+- `name`: nome exibido
+- `icon`: ícone usado no mapa
+- `defaultState`:
+  - `true`: começa ativo por padrão
+  - `false`: começa desativado por padrão
+- `aclGroups`: grupos ACL que pertencem a esse grupo (opcional)
+- `elementDataKey`: chave de element data para vínculo (opcional)
+- `elementDataValue`: valor necessário da element data (opcional)
+
+---
+
+## 8) `Config.Settings`
+
+Controla o menu de ajustes que o jogador vê. Caso você não queira que o jogador possa editar alguma opção do mapa ou forçar alguma opção para todos os jogadores, é nessa seção que você faz isso.
+
+Exemplo: Se você quiser que o mapa só tenha o tema claro e não seja possível mudar, você coloca `enabled = false` e `default = 'light'` na opção `theme`.
+### Como funciona `options`
+
+Cada opção tem:
+- `enabled`
+- `default`
+
+Regra simples:
+- `enabled = true`: jogador pode alterar no painel
+- `enabled = false`: jogador não pode alterar, fica travado no `default`
+
+### `options` completos
+
+| Opção | Valores de `default` | Efeito |
+|---|---|---|
+| `detailLevel` | `1` minimalista, `2` detalhado | Nível de detalhes de blips/informações |
+| `mapQuality` | `1` performance, `2` intermediário, `3` qualidade | Qualidade do mapa grande |
+| `minimapQuality` | `1` performance, `2` intermediário, `3` qualidade | Qualidade do minimapa |
+| `viewInVehicle` | `true`/`false` | Define se o radar fica limitado a uso em veículo |
+| `displayMode` | `1` (2D), `2` (3D) | Modo de exibição |
+| `theme` | `'default'`, `'light'`, `'dark'` | Tema visual |
+| `minimapPosition` | `1` a `9` | Posição na tela |
+| `minimapFormat` | `1` circular, `2` retangular, `3` octagonal | Formato do minimapa |
+| `minimapSize` | `0` a `1` | Tamanho do minimapa |
+| `adminViewPlayersOnMap` | `true`/`false` | Padrão admin: ver players no mapa |
+| `adminPlayerUpdateIntervalSeconds` | `1`, `10`, `30` | Padrão admin: intervalo de atualização |
+| `adminMarkPvpZones` | `true`/`false` | Padrão admin: mostrar zonas de PVP |
+
+### `detailLevel` (seção extra)
+
+| Opção | O que muda |
+|---|---|
+| `keybind` | Tecla para alternar nível de detalhe |
+| `enabled` | `true` ativa alternância no jogo, `false` desativa |
+| `minimalBlipExclusionList` | Blips ocultados no modo minimalista |
+| `hintActionWhenMinimal` | Texto da dica quando estiver no modo minimalista |
+| `hintActionWhenDetailed` | Texto da dica quando estiver no modo detalhado |
+
+---
+
+## 9) `Config.Zones`
+
+Cria zonas visíveis no mapa.
+
+Campos por zona:
+- `id`: identificador único
+- `name`: nome da zona
+- `owner`: dono/responsável (opcional)
+- `color`: cor da zona (hex)
+- `x`, `y`: posição inicial
+- `width`, `height`: tamanho
+- `renderMode`:
+  - `'blip'`: exibe com ícone
+  - `'name'`: exibe por nome
+- `blipId`: ícone da zona (quando usar modo blip)
+
+---
+
+## 10) `Config.Markers`
+
+Controla de onde os blips são lidos e como são exibidos.
+
+### `source`
+
+Valores aceitos:
+- `'game_default'`: usa blips existentes do jogo
+- `'element'`: usa nomes por element data do blip
+- `'config'`: usa somente blips definidos no arquivo
+- `'hybrid'`: mistura blips do jogo + blips da config
+
+### Outras opções
+
+| Opção | O que muda |
+|---|---|
+| `elementKey` | Chave de element data usada para nome no modo `element` |
+| `tracked` | Lista inicial de blips rastreados (opcional) |
+| `customBlips` | Blips fixos criados direto na config |
+| `labels` | Nome personalizado por ID de blip |
+
+### `externalElementData`
+
+| Opção | `true` | `false` |
+|---|---|---|
+| `enabled` | Permite pegar nome/ícone por element data externa | Ignora element data externa |
+
+`nameKey`: chave da element data de nome.  
+`iconKey`: chave da element data de ícone.
+
+### `customBlips` (estrutura por item)
+
+- `blipID`: ID do blip/ícone
+- `name`: nome exibido
+- `positions`: lista de posições `{x, y, z}`
+
+---
+
+## 11) `Config.PlayerTracking`
+
+Rastreamento de jogadores por condição.
+
+Cada rastreamento aceita:
+- chave principal (nome da regra), exemplo: `['Assalto']`
+- `elementValue`: valor que será verificado
+- `aclsView`: grupos ACL que podem visualizar
+- `icon`: ícone para o marcador do player
+- `tint`: cor do marcador
+
+---
+
+## 12) `Config.Locations`
+
+Personalização de nomes no mapa.
+
+### `displayNames`
+
+Tabela para renomear locais do GTA para nomes do seu servidor.
+
+Exemplo:
+
+```lua
+["Los Santos"] = "Manhattan"
+```
+
+### `citys`
+
+Define posição de referência dos nomes de cidades no mapa.
+
+### `neighborhoods`
+
+Define posição de referência dos nomes de bairros/regiões no mapa.
+
+Se você não quiser personalizar tudo, pode manter como está e editar só os nomes principais.
+
+---
+
+## Boas Práticas
+
+- Altere uma seção por vez e teste no jogo.
+- Use IDs de blip válidos para evitar ícones vazios.
+- Em opções booleanas, lembre:
+  - `true` ativa
+  - `false` desativa
+- Depois de salvar: `restart sqh_radar`
