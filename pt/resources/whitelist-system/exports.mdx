@@ -1,0 +1,237 @@
+---
+title: Exports Whitelist System
+description: "Adquiriu o Whitelist System e está com dúvidas sobre as funções exportáveis? você está no lugar certo!"
+---
+
+<img
+  src="/images/whitelist-system.png"
+  alt="Hero Dark"
+/>
+
+## Resolva problemas comuns
+
+<CardGroup cols={2}>
+  <Card
+    title="Resource não inicia"
+    icon="gear"
+    href="/pt/start"
+  >
+   Está com problemas para iniciar o seu produto? Clique aqui
+  </Card>
+    <Card
+    title="Configurar o resource"
+    icon="gear"
+    href="/pt/resources/whitelist#como-configurar-o-resource"
+  >
+   Está com dúvidas de como configurar algo no sistema? Clique aqui
+  </Card>
+</CardGroup>
+
+<img
+  src="/images/ashy-help.png"
+  alt="Hero Dark"
+/>
+
+## Sobre o sistema
+O Whitelist System é um sistema completo de entrada controlada para servidores MTA. Ele bloqueia o acesso de jogadores que ainda não passaram pelo processo de whitelist, com suporte a aplicação pelo jogo, pelo Discord ou pelos dois combinados.
+
+Com as funções exportadas, você pode:
+- Verificar manualmente se um player tem whitelist aprovada (útil ao trocar de personagem, reconectar, etc.);
+- Aprovar um player na whitelist diretamente via script (útil para sistemas de staff, painéis administrativos, bots externos, etc.);
+- Remover/resetar a whitelist de um player para que ele refaça o processo;
+- Obter o Discord ID de um player que passou pela whitelist (útil para cruzar dados com sistemas de Discord).
+
+## Funções Exportadas
+
+### Server-side
+
+- [verifyPlayerAccount](#verifyplayeraccount) -> `Verifica se o player tem whitelist e abre o painel caso não tenha`
+- [approveWhitelistPlayer](#approvewhitelistplayer) -> `Aprova manualmente um player na whitelist`
+- [removeWhitelistPlayer](#removewhitelistplayer) -> `Remove/reseta a whitelist de um player`
+- [getPlayerDiscordID](#getplayerdiscordid) -> `Retorna o Discord ID do player (se disponível)`
+
+
+---
+
+## verifyPlayerAccount
+
+**Side:** `server`
+
+**Syntax**
+```lua
+exports['sqh_whitelist']:verifyPlayerAccount(player)
+```
+
+**Required arguments**
+- `player` (`player`): jogador a ser verificado.
+
+**Comportamento**
+- Consulta o banco de dados pelo serial do player.
+- Se o status for `'approved'`, executa o callback `config.events.onJoinCity.server(player)` liberando o acesso.
+- Se o status for diferente de `'approved'` (ou o player nunca fez whitelist), abre o painel de whitelist para ele.
+- Esta função é chamada automaticamente nos eventos `onPlayerJoin` e `onPlayerLogin` quando `config.events.verifyOnJoin` ou `config.events.verifyOnLogin` são `true`. Use a export para chamadas manuais.
+
+**Return**
+- Não há retorno explícito. A ação ocorre via callbacks e triggers client-side.
+
+**Example**
+```lua
+-- SERVER-SIDE (chamar ao trocar de personagem)
+addEventHandler('onCharacterSwitch', root, function(player)
+    exports['sqh_whitelist']:verifyPlayerAccount(player)
+end)
+```
+
+```lua
+-- SERVER-SIDE (chamar via comando de staff para forçar re-verificação)
+addCommandHandler('verificarwl', function(player, _, targetName)
+    local target = getPlayerFromName(targetName)
+    if target then
+        exports['sqh_whitelist']:verifyPlayerAccount(target)
+        outputChatBox('Verificação enviada para ' .. targetName, player)
+    end
+end)
+```
+
+
+---
+
+## approveWhitelistPlayer
+
+**Side:** `server`
+
+**Syntax**
+```lua
+exports['sqh_whitelist']:approveWhitelistPlayer(player)
+```
+
+**Required arguments**
+- `player` (`player`): jogador a ser aprovado.
+
+**Comportamento**
+- Atualiza o status na tabela `whitelist_players` para `'approved'`.
+- Atualiza o status da tentativa (`whitelist_attempts`) com `aditionalInfos.approved_by = 'admin'`.
+- Fecha o painel de whitelist do player e executa `config.events.onJoinCity.server(player)`.
+- Se o player já estiver aprovado ou não tiver registro, envia uma notificação de erro.
+
+**Return**
+- Não há retorno explícito. O resultado é enviado via notificação ao player.
+
+**Example**
+```lua
+-- SERVER-SIDE (aprovação por comando de staff)
+addCommandHandler('aprovarwl', function(player, _, targetName)
+    local target = getPlayerFromName(targetName)
+    if target then
+        exports['sqh_whitelist']:approveWhitelistPlayer(target)
+        outputChatBox('Whitelist aprovada para ' .. getPlayerName(target), player)
+    else
+        outputChatBox('Jogador não encontrado.', player)
+    end
+end)
+```
+
+```lua
+-- SERVER-SIDE (aprovação automática por sistema de entrevista próprio)
+addEventHandler('onPlayerFinishInterview', root, function(player, approved)
+    if approved then
+        exports['sqh_whitelist']:approveWhitelistPlayer(player)
+    end
+end)
+```
+
+
+---
+
+## removeWhitelistPlayer
+
+**Side:** `server`
+
+**Syntax**
+```lua
+exports['sqh_whitelist']:removeWhitelistPlayer(player)
+```
+
+**Required arguments**
+- `player` (`player`): jogador que terá a whitelist removida/resetada.
+
+**Comportamento**
+- Remove o registro do player da tabela `whitelist_players`.
+- Limpa os dados em memória do player (código de segurança, tentativa ativa, etc.).
+- Após remover, chama `verifyPlayerAccount` automaticamente — o player verá o painel de whitelist novamente como se nunca tivesse feito.
+- O histórico de tentativas (`whitelist_attempts`) **não** é apagado — apenas o vínculo do player é removido.
+
+**Return**
+- Não há retorno explícito. O player recebe uma notificação e o painel reabre.
+
+**Example**
+```lua
+-- SERVER-SIDE (remover whitelist por painel de admin)
+addCommandHandler('removerwl', function(player, _, targetName)
+    local target = getPlayerFromName(targetName)
+    if target then
+        exports['sqh_whitelist']:removeWhitelistPlayer(target)
+        outputChatBox('Whitelist removida de ' .. getPlayerName(target), player)
+    else
+        outputChatBox('Jogador não encontrado.', player)
+    end
+end)
+```
+
+
+---
+
+## getPlayerDiscordID
+
+**Side:** `server`
+
+**Syntax**
+```lua
+local discordID = exports['sqh_whitelist']:getPlayerDiscordID(player)
+```
+
+**Required arguments**
+- `player` (`player`): jogador alvo.
+
+**Comportamento**
+- Retorna o Discord ID armazenado em cache para o player (preenchido no momento da aprovação via bot do Discord).
+- O cache é carregado ao iniciar o resource (para players já online) e ao verificar a conta durante o `onPlayerLogin`/`onPlayerJoin`.
+- Se o player não tiver passado pela whitelist via Discord, ou ainda não tiver sido verificado na sessão atual, retorna `false`.
+
+**Return**
+- `string` com o Discord ID do player, ex: `"123456789012345678"`.
+- `false` se o Discord ID não estiver disponível.
+
+**Example**
+```lua
+-- SERVER-SIDE (cruzar com sistema de Discord)
+addCommandHandler('meudiscord', function(player)
+    local discordID = exports['sqh_whitelist']:getPlayerDiscordID(player)
+    if discordID then
+        outputChatBox('Seu Discord ID: ' .. discordID, player)
+    else
+        outputChatBox('Seu Discord ID não foi encontrado.', player)
+    end
+end)
+```
+
+```lua
+-- SERVER-SIDE (dar cargo via bot ao entrar)
+addEventHandler('onPlayerLogin', root, function()
+    local discordID = exports['sqh_whitelist']:getPlayerDiscordID(source)
+    if discordID then
+        -- integrar com bot de discord externo
+        triggerEvent('onSyncDiscordRole', root, source, discordID, 'membro')
+    end
+end)
+```
+
+
+---
+
+## Observações
+
+- Todas as exports só funcionam após o resource ser iniciado e a licença validada.
+- A export `verifyPlayerAccount` é chamada automaticamente pelo sistema conforme as configurações `verifyOnJoin` e `verifyOnLogin`. Use a export para casos manuais específicos.
+- Para aprovar players em lote ou por painel web, prefira usar `approveWhitelistPlayer` via script server-side no momento em que o player estiver online.
+- O Discord ID só fica disponível no cache enquanto o player estiver online. Para consultas offline, acesse diretamente o banco de dados na coluna `discordID` da tabela `whitelist_players`.

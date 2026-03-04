@@ -1,0 +1,1014 @@
+---
+title: Configurações Phone System
+description: "Manual completo de configuração do Phone System. Saiba o que cada opção faz e como customizar o sistema para o seu servidor."
+---
+
+<img
+  src="/images/phone-system.png"
+  alt="Hero Dark"
+/>
+
+## Resolva problemas comuns
+
+<CardGroup cols={2}>
+  <Card
+    title="Resource não inicia"
+    icon="gear"
+    href="/pt/start"
+  >
+   Está com problemas para iniciar o seu produto? Clique aqui
+  </Card>
+    <Card
+    title="Funções exportáveis"
+    icon="gear"
+    href="/pt/resources/phone/exports"
+  >
+   Precisa integrar o Phone System com outro script? Clique aqui
+  </Card>
+</CardGroup>
+
+<img
+  src="/images/ashy-help.png"
+  alt="Hero Dark"
+/>
+
+## Sobre as configurações
+
+Todas as configurações do Phone System são feitas no arquivo `config/settings.lua`. O arquivo é organizado em seções, cada uma responsável por uma parte do sistema. Abaixo você encontra o manual completo de cada opção.
+
+---
+
+## 1. Licença
+
+Configuração da licença de ativação do sistema.
+
+| Opção | Descrição |
+|---|---|
+| `license.Email` | E-mail da conta na Squash Company utilizado na compra do produto |
+| `license.Key` | Chave de licença do produto |
+
+```lua
+license = {
+    Email = 'seu@email.com',
+    Key = 'SUA_CHAVE_AQUI'
+}
+```
+
+---
+
+## 2. Integrações
+
+Define quais sistemas externos o Phone System deve se integrar automaticamente.
+
+| Opção | Descrição |
+|---|---|
+| `integrations.sqh_groups` | Ativa integração com o sistema de grupos/gangues |
+| `integrations.sqh_accounts` | Ativa integração com o sistema de contas/personagens |
+| `integrations.sqh_custom` | Ativa integração com sistema de conta customizado (feito por você) |
+
+| Valor | O que muda |
+|---|---|
+| `true` | A integração será ativada e os dados serão sincronizados |
+| `false` | A integração não será usada |
+
+```lua
+integrations = {
+    sqh_groups = true,
+    sqh_accounts = true,
+    sqh_custom = false
+}
+```
+
+> Se `sqh_custom = true`, você deverá preencher as funções na seção `config.system` para buscar/salvar dados da conta manualmente.
+
+---
+
+## 3. Configurações Gerais
+
+### 3.1 Database
+
+| Opção | Descrição |
+|---|---|
+| `config.isResetDatabase` | Se `true`, reseta todas as tabelas do banco de dados ao iniciar o resource. **CUIDADO: apaga todos os dados.** |
+
+### 3.2 Tecla de abrir
+
+| Opção | Descrição |
+|---|---|
+| `config.keyOpen` | Tecla para abrir/fechar o celular. Padrão: `"K"` |
+| `config.disableKeyOpen` | Se `true`, desabilita o keybind automático. Use junto com `bindPhonePlayer`/`unbindPhonePlayer` para controle manual |
+
+### 3.3 Verificação antes de abrir
+
+Callback chamado antes de abrir o celular. Retorne `false` para bloquear a abertura.
+
+```lua
+config.verifyToOpen = function(player)
+    -- impede abrir o celular se o player estiver morto
+    if getElementHealth(player) == 0 then
+        return false
+    end
+    return true
+end
+```
+
+### 3.4 Comportamento
+
+| Opção | Tipo | Descrição |
+|---|---|---|
+| `config.showCursor` | `boolean` | Exibe o cursor ao abrir o celular |
+| `config.haveOnlyOnePhone` | `boolean` | Se `true`, o player não pode ter mais de um celular |
+| `config.acceptPhoneMessages` | `boolean` | Se `true`, ligações são convertidas em mensagens de WhatsApp (sem chamada de voz) |
+| `config.blockLeftVehicle` | `boolean` | Se `true`, bloqueia o celular por alguns segundos após sair de um veículo |
+| `config.blockLeftVehicleTime` | `number` | Tempo em ms de bloqueio após sair do veículo |
+| `config.cursorBind` | `string` | Tecla para mostrar/esconder o cursor dentro do celular |
+
+---
+
+## 4. Compra de Celular (Markers)
+
+Configura os markers de loja de celular no mapa.
+
+| Opção | Tipo | Descrição |
+|---|---|---|
+| `config.buyPhoneInfos.desactiveBuyMarkers` | `boolean` | Desativa os markers de compra no mapa |
+| `config.buyPhoneInfos.valueToBuyPhone` | `number` | Preço do celular na loja |
+
+### 4.1 Funções de dinheiro
+
+Defina como o dinheiro é verificado e deduzido no seu servidor:
+
+```lua
+config.buyPhoneInfos.verifyMoney = function(player)
+    -- retorne true se o player tem saldo suficiente
+    return getPlayerMoney(player) >= config.buyPhoneInfos.valueToBuyPhone
+end
+
+config.buyPhoneInfos.takeMoney = function(player, amount)
+    -- debite o valor do player
+    takePlayerMoney(player, amount)
+end
+```
+
+### 4.2 Markers de loja
+
+```lua
+config.buyPhoneInfos.markers = {
+    {x = 100.0, y = 200.0, z = 10.0}
+}
+```
+
+### 4.3 Marker customizado
+
+Callback chamado ao criar cada marker — permite personalizar cor/tipo:
+
+```lua
+config.buyPhoneInfos.customMarkers = function(marker)
+    setMarkerColor(marker, 0, 150, 255, 200)
+end
+```
+
+---
+
+## 5. Model do Celular e JBL
+
+### 5.1 Posição do Celular na Mão
+
+Define onde o model do celular aparece no corpo do player enquanto o celular está aberto.
+
+```lua
+config.phoneModelPosition = {x = 0.0, y = 0.0, z = 0.0, rx = 0.0, ry = 0.0, rz = 0.0}
+config.phoneModelObject = 367 -- ID do objeto
+```
+
+### 5.2 JBL (Spotify)
+
+| Opção | Tipo | Descrição |
+|---|---|---|
+| `config.jblModelObject` | `number` | ID do model da JBL |
+| `config.jblModelPosition` | `table` | Posição/rotação no corpo do player |
+| `config.jblDropRotation` | `table` | Rotação ao dropar no chão |
+| `config.jblCommandsActive` | `boolean` | Se `true`, ativa os comandos `/equiparJBL` e `/droparJBL` automaticamente |
+
+---
+
+## 6. Sistema de Contas
+
+### 6.1 Tipo de conta
+
+| Opção | Valor | Descrição |
+|---|---|---|
+| `config.system.accountSave.accountType` | `"Account"` | Usa o sistema de contas nativo do MTA (loginAccount) |
+| `config.system.accountSave.accountType` | `"ElementData"` | Usa ElementData para identificar o player |
+
+Para `"ElementData"`, configure:
+
+```lua
+config.system.accountSave.elementDataName = 'character:id' -- nome do ElementData
+```
+
+### 6.2 Formato do número de telefone
+
+| Opção | Tipo | Descrição |
+|---|---|---|
+| `config.system.numberType` | `string` | Padrão do número. Use `x` onde devem ser gerados dígitos aleatórios. Ex: `"9xxxx-xxxx"` |
+| `config.system.numberQuantity` | `number` | Quantidade de dígitos `x` no padrão acima |
+
+---
+
+## 7. Eventos (Callbacks)
+
+Callbacks chamados em ações do celular.
+
+```lua
+config.events.onBuyPhone = function(player)
+    -- chamado quando o player compra/recebe um celular
+    outputChatBox('Você recebeu um celular!', player)
+end
+
+config.events.onOpenPhone = function(player)
+    -- chamado quando o celular é aberto
+end
+
+config.events.onClosePhone = function(player)
+    -- chamado quando o celular é fechado
+end
+```
+
+---
+
+## 8. Notificações (Infobox)
+
+Funções para enviar notificações ao player. Personalize para usar o sistema de notificações do seu servidor.
+
+```lua
+config.sendInfobox = function(player, text, type)
+    -- notificação server-side
+    -- type pode ser: 'success', 'error', 'info', 'warning'
+    outputChatBox('[Celular] ' .. text, player)
+end
+
+config.sendClientInfobox = function(player, text, type)
+    -- notificação client-side via triggerClientEvent
+    triggerClientEvent(player, 'minhaNotificacao', player, text, type)
+end
+```
+
+---
+
+## 9. Escala por Resolução
+
+Define escala do celular para diferentes resoluções de tela.
+
+```lua
+config.predefinedScaleValues = {
+    [1] = {width = 1920, height = 1080, scale = 1.0},
+    [2] = {width = 1280, height = 720, scale = 0.75},
+    -- adicione mais resoluções se necessário
+}
+```
+
+---
+
+## 10. Controles Bloqueados com Celular Aberto
+
+Lista de controles do MTA que ficam desabilitados enquanto o celular estiver aberto.
+
+```lua
+config.restrictionControls = {
+    {group = 0, control = 14},  -- enter vehicle
+    {group = 0, control = 16},  -- next weapon
+    -- ... adicione ou remova controles conforme necessário
+}
+```
+
+Consulte a [lista de controles do MTA](https://wiki.multitheftauto.com/wiki/Control_names) para os IDs corretos.
+
+---
+
+## 11. Aplicativos
+
+### 11.1 Aplicativos padrão (pré-instalados)
+
+Lista de apps que estarão instalados no celular desde a criação, sem precisar baixar na loja:
+
+```lua
+config.applicationsDefault = {
+    'whatsapp', 'phone', 'contacts', 'settings', 'camera', 'photos', 'calculator'
+}
+```
+
+### 11.2 Aplicativos que não podem ser desinstalados
+
+```lua
+config.applicationsBlockedDesinstall = {
+    'phone', 'settings', 'contacts'
+}
+```
+
+### 11.3 Aplicativos disponíveis na loja
+
+```lua
+config.applicationsReleased = {
+    'whatsapp', 'instagram', 'spotify', 'blaze', 'paypal', 'uber', 'maps', 'claro',
+    'google', 'youtube', 'cnn', 'clima', 'notes', 'camera', 'calculator', 'google_translate'
+}
+```
+
+---
+
+## 12. Configurações por Aplicativo
+
+Todos os apps compartilham campos base de metadados usados pela AppStore:
+
+| Campo | Tipo | Descrição |
+|---|---|---|
+| `name` | `string` | Nome exibido na AppStore |
+| `icon` | `string` | Caminho do ícone |
+| `description` | `string` | Descrição exibida na AppStore |
+| `timeDownload` | `number` | Tempo em segundos para "baixar" o app na AppStore |
+| `updatedAt` / `createdAt` | `number` | Timestamps Unix de criação/atualização exibidos na AppStore |
+| `banners` | `table` | Lista de 3 imagens exibidas na página do app na AppStore |
+
+---
+
+### 12.1 AppStore (`config.apps.appstore`)
+
+| Opção | Tipo | Descrição |
+|---|---|---|
+| `appsRecomendation` | `table` | Lista de nomes de apps exibidos como sugestões de busca |
+| `applicationRecommended` | `string` | App em destaque na seção "App Recomendado" |
+| `gameRecommended` | `string` | Jogo em destaque na seção "Jogo Recomendado" |
+| `recentsPage.showNewApps` | `number` | Quantidade de novos apps exibidos na seção recentes |
+| `recentsPage.showUpdateApps` | `number` | Quantidade de apps atualizados exibidos na seção recentes |
+
+```lua
+["appstore"] = {
+    ["appsRecomendation"] = {"whatsapp", "snake game", "youtube", "spotify", "instagram"},
+    ["applicationRecommended"] = "spotify",
+    ["gameRecommended"] = "snake",
+    ["timeDownload"] = 15,
+    ["recentsPage"] = {
+        ["showNewApps"] = 6,
+        ["showUpdateApps"] = 10,
+    }
+}
+```
+
+---
+
+### 12.2 WhatsApp (`config.apps.whatsapp`)
+
+| Opção | Tipo | Descrição |
+|---|---|---|
+| `emojisQuantity` | `number` | Quantidade de emojis disponíveis no teclado |
+| `stickersQuantity` | `number` | Quantidade de pacotes de stickers disponíveis |
+| `returnName` | `function(player)` | Função que retorna o nome do player exibido no WhatsApp |
+
+**Painel de configurações do app (`settingsPanel`)**
+
+O WhatsApp possui um painel de configurações in-app com subpainéis:
+
+| Subpainel | Opções disponíveis |
+|---|---|
+| `account` (Conta) | `verifyFaceID` — Exigir FaceID para entrar (toggle) |
+| `privacity` (Privacidade) | `viewProfilePhoto` — Quem pode ver a foto (Todos / Contatos) · `confirmTicks` — Confirmação de visto (toggle) |
+| `calls` (Ligações) | `silenceCallsStranger` — Receber ligações de estranhos (toggle) |
+| `notifications` (Notificações) | `receiveNotifcations` — Receber notificações (toggle) · `soundNotifications` — Som de notificações (toggle) |
+
+**Status Panel (`statusPanel`)**
+
+| Opção | Tipo | Descrição |
+|---|---|---|
+| `backgroundColors` | `table` | Lista de cores de fundo disponíveis para criar status (formato `tocolor`) |
+| `fonts` | `table` | Lista de fontes disponíveis para texto nos status |
+
+```lua
+["whatsapp"] = {
+    ["emojisQuantity"] = 129,
+    ["stickersQuantity"] = 1,
+    ["returnName"] = function(player)
+        return getPlayerName(player)
+    end,
+    ["statusPanel"] = {
+        ["backgroundColors"] = {
+            [1] = tocolor(239, 179, 47, 255),
+            [2] = tocolor(145, 21, 21, 255),
+            [3] = tocolor(47, 135, 239, 255),
+        },
+        ["fonts"] = {
+            [1] = "assets/fonts/apple_text_regular.ttf",
+            [2] = "assets/fonts/Roboto_Regular.ttf",
+        }
+    },
+}
+```
+
+---
+
+### 12.3 Spotify (`config.apps.spotify`)
+
+| Opção | Tipo | Descrição |
+|---|---|---|
+| `verifyPermission` | `function(player)` | Retorna `true` se o player pode usar o Spotify. Use para restringir por ACL ou cargo |
+
+**`configurations` — Configurações de áudio**
+
+| Opção | Tipo | Descrição |
+|---|---|---|
+| `maxSoundVolume` | `number` | Volume máximo permitido (padrão: `10`) |
+| `maxSoundDistance` | `number` | Distância máxima de audição em unidades do jogo (padrão: `10`) |
+| `keyToGetJBL` | `string` | Tecla para pegar a JBL do chão (padrão: `"L"`) |
+| `gendersMusic` | `table` | Gêneros musicais exibidos na interface (`gender`, `color`) |
+| `colorsToCardsGender` | `table` | Cores dos cards de gênero (formato `tocolor`) |
+| `getCarName` | `function(vehicle)` | Retorna o nome do veículo exibido no modo Bluetooth do carro |
+| `verifyPermissionToBluetooth` | `function(player)` | Retorna `true` se o player pode usar o Bluetooth da JBL |
+
+**`soundsVehicleConfigs` — Configuração por veículo**
+
+| Opção | Tipo | Descrição |
+|---|---|---|
+| `getCarIdentifier` | `function(vehicle)` | Função que retorna o identificador do veículo (ex.: `getElementModel`) |
+| `vehicles` | `table` | Tabela com configurações específicas por ID de veículo: `maxSoundVolume` e `maxSoundDistance` |
+
+```lua
+["spotify"] = {
+    ["configurations"] = {
+        ['maxSoundVolume'] = 10,
+        ['maxSoundDistance'] = 10,
+        ['keyToGetJBL'] = "L",
+        ['gendersMusic'] = {
+            {gender = "Funk", color = 1},
+            {gender = "Sertanejo", color = 2},
+            {gender = "Trap", color = 3},
+        },
+        ['soundsVehicleConfigs'] = {
+            ['getCarIdentifier'] = function(vehicle)
+                return getElementModel(vehicle)
+            end,
+            ['vehicles'] = {
+                [402] = {maxSoundVolume = 10, maxSoundDistance = 10}
+                -- adicione mais modelos de veículo conforme necessário
+            }
+        },
+        ['verifyPermissionToBluetooth'] = function(player)
+            return isObjectInACLGroup('user.'..getAccountName(getPlayerAccount(player)), aclGetGroup("Console"))
+        end,
+        ['getCarName'] = function(vehicle)
+            return getVehicleNameFromModel(getElementModel(vehicle))
+        end,
+    },
+    ['verifyPermission'] = function(player)
+        return true -- remova a restrição ou adicione verificação de ACL/cargo
+    end,
+}
+```
+
+---
+
+### 12.4 Uber (`config.apps.uber`)
+
+| Opção | Tipo | Descrição |
+|---|---|---|
+| `pricePerKMCar` | `number` | Preço cobrado por KM em corridas de **carro** |
+| `pricePerKMBike` | `number` | Preço cobrado por KM em corridas de **moto** |
+
+**`settings` — Configurações de funcionamento**
+
+| Opção | Tipo | Descrição |
+|---|---|---|
+| `carsAllowed` | `table` | Tabela com IDs de modelos de veículos autorizados para Uber carro. Ex: `{[402] = true}` |
+| `bikesAllowed` | `table` | Tabela com IDs de modelos de veículos autorizados para Uber moto |
+| `getCarIdModel` | `function(vehicle)` | Retorna o ID do modelo do veículo |
+| `getCarName` | `function(vehicle)` | Retorna o nome exibido do veículo durante a corrida |
+| `getCarPlate` | `function(vehicle)` | Retorna a placa do veículo |
+| `verifyMoney` | `function(player)` | Retorna o saldo atual do player (para verificar se pode pagar) |
+| `takeMoney` | `function(player, value)` | Debita o valor da corrida do player |
+| `giveMoney` | `function(player, value)` | Credita o valor da corrida ao motorista |
+
+```lua
+["uber"] = {
+    ["pricePerKMCar"] = 15.00,
+    ["pricePerKMBike"] = 8.00,
+    ['settings'] = {
+        ['carsAllowed'] = {[402] = true}, -- ID 402 = Infernus
+        ['bikesAllowed'] = {[522] = true}, -- ID 522 = NRG-500
+        getCarIdModel = function(vehicle)
+            return getElementModel(vehicle)
+        end,
+        getCarName = function(vehicle)
+            return getVehicleNameFromModel(getElementModel(vehicle))
+        end,
+        getCarPlate = function(vehicle)
+            return getVehiclePlateText(vehicle)
+        end,
+        verifyMoney = function(player)
+            return getPlayerMoney(player)
+        end,
+        takeMoney = function(player, value)
+            return takePlayerMoney(player, value)
+        end,
+        giveMoney = function(player, value)
+            return givePlayerMoney(player, value)
+        end
+    }
+}
+```
+
+---
+
+### 12.5 Maps (`config.apps.maps`)
+
+| Opção | Tipo | Descrição |
+|---|---|---|
+| `localsConfig` | `table` | Lista de locais fixos exibidos no mapa do app |
+| `suggestionsLocal` | `table` | Índices da `localsConfig` exibidos como sugestões no app |
+
+**Campos de cada item em `localsConfig`:**
+
+| Campo | Tipo | Descrição |
+|---|---|---|
+| `nameLocation` | `string` | Nome exibido do local |
+| `mapPosition` | `table` | Posição `{x, y}` no mapa 2D do app |
+| `position` | `table` | Tamanho do ícone: `{width, height}` |
+| `typeIcon` | `string` | Tipo do ícone. Use `"fixed"` para ícones padrão |
+| `id` | `number` | ID do blip do MTA usado como ícone |
+
+```lua
+["maps"] = {
+    ["localsConfig"] = {
+        [1] = {nameLocation = "Delegacia", mapPosition = {x = 1392, y = 247}, position = {width = 22, height = 22}, typeIcon = "fixed", id = 38},
+        [2] = {nameLocation = "Porto", mapPosition = {x = 2308, y = -849}, position = {width = 22, height = 22}, typeIcon = "fixed", id = 37},
+    },
+    ["suggestionsLocal"] = {1, 2}, -- índices da tabela localsConfig
+}
+```
+
+---
+
+### 12.6 Claro (`config.apps.claro`)
+
+| Opção | Tipo | Descrição |
+|---|---|---|
+| `plans` | `table` | Lista de planos de dados disponíveis para compra |
+| `moneyVerify` | `function(player)` | Retorna o saldo do player para verificar se pode comprar |
+| `moneyTake` | `function(player, amount)` | Debita o valor do plano do player |
+
+**Campos de cada plano em `plans`:**
+
+| Campo | Tipo | Descrição |
+|---|---|---|
+| `gigabyteAmount` | `string` | Quantidade de GB do plano (ex: `"10"`) — máximo: `"99"` |
+| `displayPrice` | `string` | Preço exibido na interface (ex: `"R$ 12.000"`) |
+| `price` | `number` | Valor real debitado do player |
+
+```lua
+["claro"] = {
+    ["configurations"] = {
+        ["plans"] = {
+            {gigabyteAmount = "01", displayPrice = "R$ 1.500", price = 1500},
+            {gigabyteAmount = "05", displayPrice = "R$ 6.500", price = 6500},
+            {gigabyteAmount = "10", displayPrice = "R$ 12.000", price = 12000},
+            {gigabyteAmount = "20", displayPrice = "R$ 22.000", price = 22000},
+            -- máximo permitido: 99 GB e preço até 99.999
+        },
+        ['moneyVerify'] = function(player)
+            return getPlayerMoney(player)
+        end,
+        ['moneyTake'] = function(player, amount)
+            return takePlayerMoney(player, amount)
+        end,
+    }
+}
+```
+
+---
+
+### 12.7 Blaze (`config.apps.blaze`)
+
+**`configurations` — Configurações gerais da roleta**
+
+| Opção | Tipo | Descrição |
+|---|---|---|
+| `timeToStartRound` | `number` | Tempo em ms para iniciar a rodada após o jogador clicar em iniciar |
+| `timeDuringRoullete` | `number` | Tempo em ms que a roleta fica girando até revelar o resultado |
+| `depositValues` | `table` | Valores pré-definidos de depósito rápido |
+| `withdrawValues` | `table` | Valores pré-definidos de saque rápido |
+| `percentageAffiliationBonus` | `number` | % de bonus recebido pelo afiliador quando alguém usa seu código |
+| `percentageBonusAffiliate` | `number` | % de bonus recebido pelo afiliado no próximo depósito |
+
+**`moneyOptions` — Integração de dinheiro**
+
+| Opção | Tipo | Descrição |
+|---|---|---|
+| `walletMoney` | `string` | Fonte do dinheiro da carteira: `"Game"`, `"ElementData"`, `"Function"` ou `"Disabled"` |
+| `walletMoneyData` | `string` | Nome do ElementData (usado quando `walletMoney = "ElementData"`) |
+| `walletFunction` | `function(player, moneyValue, typeManage)` | Função customizada de controle da carteira. `typeManage` = `"withdraw"` ou `"deposit"`. Retorne `true` em sucesso |
+| `bankMoney` | `string` | Fonte do dinheiro bancário: `"ElementData"`, `"Function"` ou `"Disabled"` |
+| `bankMoneyData` | `string` | Nome do ElementData do banco |
+| `bankFunction` | `function(player, moneyValue, typeManage)` | Função customizada de controle do banco |
+
+**`logsDiscord` — Logs no Discord**
+
+| Opção | Tipo | Descrição |
+|---|---|---|
+| `active` | `boolean` | Se `true`, envia notificações no Discord para cada evento financeiro |
+| `roundWebhook` | `string` | URL do webhook para logs de rodadas |
+| `depositWebhook` | `string` | URL do webhook para logs de depósitos |
+| `withdrawWebhook` | `string` | URL do webhook para logs de saques |
+| `rewardWebhook` | `string` | URL do webhook para logs de recompensas |
+
+**`rewardsConfigurations` — Sistema de recompensas por nível**
+
+| Opção | Tipo | Descrição |
+|---|---|---|
+| `typeReward` | `string` | Quando recompensar: `"Rounds"` (por rodadas jogadas), `"Wins"` (por vitórias) ou `"Both"` (ambos) |
+| `rewardsLevel` | `table` | Define qual recompensa é dada ao atingir cada nível (índice = nível) |
+
+**Tipos de recompensa disponíveis:**
+
+| Tipo | Descrição |
+|---|---|
+| `"money"` | Saldo em dinheiro direto na Blaze |
+| `"cashbackRounds"` | Cashback de X% por X rodadas de apostas |
+| `"cashbackTime"` | Cashback de X% durante X segundos |
+| `"roundsFree"` | X rodadas grátis de X valor |
+| `"depositBonus"` | Bônus de X% no próximo depósito |
+
+**Campos dos valores em `rewardsLevel`:**
+
+| Campo | Descrição |
+|---|---|
+| `rewards` | Lista de tipos de recompensa possíveis. Se tiver mais de um, o sistema sorteia aleatoriamente entre eles |
+| `values.percentage` | Intervalo `{min, max}` da porcentagem |
+| `values.rounds` | Intervalo de quantidade de rodadas |
+| `values.value` | Intervalo do valor em dinheiro |
+| `values.time` | Intervalo de tempo em segundos |
+| `values.timeExpire` | Intervalo de validade da recompensa em segundos |
+
+```lua
+["blaze"] = {
+    ["configurations"] = {
+        ["timeToStartRound"] = 15000,
+        ["timeDuringRoullete"] = 6000,
+        ["depositValues"] = {100, 1000, 10000},
+        ["withdrawValues"] = {50, 500, 5000},
+        ["percentageAffiliationBonus"] = 10,
+        ["percentageBonusAffiliate"] = 30,
+        ["moneyOptions"] = {
+            ["walletMoney"] = "Game", -- usa getPlayerMoney/takePlayerMoney
+            ["walletFunction"] = function(player, moneyValue, typeManage)
+                if typeManage == "deposit" then
+                    return getPlayerMoney(player) >= moneyValue
+                end
+                return false
+            end,
+            ["bankMoney"] = "Disabled",
+            ['logsDiscord'] = {
+                ['active'] = true,
+                ['roundWebhook'] = "https://discord.com/api/webhooks/...",
+                ['depositWebhook'] = "https://discord.com/api/webhooks/...",
+                ['withdrawWebhook'] = "https://discord.com/api/webhooks/...",
+                ['rewardWebhook'] = "https://discord.com/api/webhooks/...",
+            }
+        },
+        ["rewardsConfigurations"] = {
+            ["typeReward"] = "Both",
+            ["rewardsLevel"] = {
+                [2] = {rewards = {"cashbackRounds"}, values = {percentage = {50, 20}, rounds = {1, 3}, value = {0}, time = {0}, timeExpire = {80, 100}}},
+                [5] = {rewards = {"money"}, values = {percentage = {0}, rounds = {0}, value = {3000, 9000}, time = {0}, timeExpire = {300, 350}}},
+                [6] = {rewards = {"cashbackTime"}, values = {percentage = {10, 35}, rounds = {0}, value = {0}, time = {100, 120}, timeExpire = {300, 350}}},
+                [7] = {rewards = {"roundsFree"}, values = {percentage = {0}, rounds = {3}, value = {2, 3}, time = {0}, timeExpire = {300, 350}}},
+                [8] = {rewards = {"depositBonus"}, values = {percentage = {10, 30, 45}, rounds = {0}, value = {0}, time = {0}, timeExpire = {300, 350}}},
+            },
+        },
+    },
+}
+```
+
+---
+
+### 12.8 Paypal (`config.apps.paypal`)
+
+**`configurations` — Configurações gerais**
+
+| Opção | Tipo | Descrição |
+|---|---|---|
+| `blockDepositInPhone` | `boolean` | Se `true`, o jogador não pode fazer depósito pelo celular |
+| `getIDPlayer` | `function(player)` | Retorna o ID do jogador usado como identificador da conta PayPal |
+| `typesTransaction` | `table` | Nomes dos tipos de transação exibidos no histórico |
+| `existsTaxOpenAccount` | `boolean` | Se `true`, gera um boleto de taxa para abrir a conta PayPal |
+| `valueTaxOpenAccount` | `number` | Valor da taxa de abertura de conta (usado quando `existsTaxOpenAccount = true`) |
+| `minInvestmentPercentage` | `number` | % mínima de retorno em investimentos |
+| `maxInvestmentPercentage` | `number` | % máxima de retorno em investimentos |
+| `fineDueDatePercentage` | `number` | % de multa por dia aplicada em boletos vencidos |
+
+**`walletMoney` — Integração com dinheiro**
+
+| Opção | Tipo | Descrição |
+|---|---|---|
+| `typeGet` | `function(player)` | Retorna o saldo da carteira do jogador |
+| `takeMoney` | `function(player, money)` | Debita da carteira |
+| `giveMoney` | `function(player, money)` | Credita na carteira |
+
+**`transferInfos.logsDiscord` — Logs no Discord**
+
+| Campo | Descrição |
+|---|---|
+| `active` | Se `true`, envia logs de todas as movimentações |
+| `transferWebhook` | URL do webhook para transferências |
+| `depositWebhook` | URL do webhook para depósitos |
+| `withdrawWebhook` | URL do webhook para saques |
+| `investimentsWebhook` | URL do webhook para investimentos |
+
+```lua
+["paypal"] = {
+    ["configurations"] = {
+        ["blockDepositInPhone"] = false,
+        ["getIDPlayer"] = function(player)
+            return getElementData(player, 'ID')
+        end,
+        ["typesTransaction"] = {
+            [1] = "Transferência Via Pix",
+            [2] = "Depósito",
+            [3] = "Saque",
+            [4] = "Investimento",
+        },
+        ['existsTaxOpenAccount'] = true,
+        ['valueTaxOpenAccount'] = 100,
+        ["minInvestmentPercentage"] = 3,
+        ["maxInvestmentPercentage"] = 20,
+        ["fineDueDatePercentage"] = 10,
+        ["walletMoney"] = {
+            typeGet = function(player)
+                return getPlayerMoney(player)
+            end,
+            takeMoney = function(player, money)
+                return takePlayerMoney(player, money)
+            end,
+            giveMoney = function(player, money)
+                return givePlayerMoney(player, money)
+            end
+        },
+        ['transferInfos'] = {
+            ['logsDiscord'] = {
+                ['active'] = true,
+                ['transferWebhook'] = "https://discord.com/api/webhooks/...",
+                ['depositWebhook'] = "https://discord.com/api/webhooks/...",
+                ['withdrawWebhook'] = "https://discord.com/api/webhooks/...",
+                ['investimentsWebhook'] = "https://discord.com/api/webhooks/...",
+            }
+        }
+    },
+}
+```
+
+---
+
+### 12.9 Staff (`config.apps.staff`)
+
+| Opção | Tipo | Descrição |
+|---|---|---|
+| `verifyPermission` | `function(player)` | Retorna `true` se o player tem acesso ao app Staff |
+| `apps` | `table` | Lista de apps (por nome) que o staff pode gerenciar |
+| `subPanelsApps` | `table` | Define subpainéis por app dentro do Staff |
+
+**`subPanelsApps` — Subpainéis disponíveis**
+
+| App | Subpainel | Descrição |
+|---|---|---|
+| `whatsapp` | `loadChannels = true` | Carrega os canais do WhatsApp para gerenciamento |
+| `instagram` | `loadVerifyAccountsInsta = true` | Carrega contas do Instagram para verificação (selo azul) |
+| `Geral` | `action = 'changeNumber'` | Botão para trocar o número de telefone de um jogador |
+| `Geral` | `action = 'createWifi'` | Botão para criar uma rede Wi-Fi |
+
+```lua
+["staff"] = {
+    ['verifyPermission'] = function(player)
+        return isObjectInACLGroup('user.'..getAccountName(getPlayerAccount(player)), aclGetGroup("Admin"))
+    end,
+    ["apps"] = {"whatsapp", "instagram"},
+    ["subPanelsApps"] = {
+        ["whatsapp"] = {
+            {subtitle = "Canais", loadChannels = true}
+        },
+        ["instagram"] = {
+            {subtitle = "Contas verificadas", loadVerifyAccountsInsta = true}
+        },
+        ["Geral"] = {
+            {subtitle = "Trocar número de telefone", button = true, action = 'changeNumber'},
+            {subtitle = "Criar Wi-Fi", button = true, action = 'createWifi'}
+        }
+    },
+}
+```
+
+---
+
+### 12.10 Google Tradutor (`config.apps.google_translate`)
+
+| Opção | Tipo | Descrição |
+|---|---|---|
+| `languageTo` | `string` | Idioma de **origem** padrão (ex: `'pt'`, `'en'`, `'es'`, `'de'`, `'ja'`, `'fr'`) |
+| `languageFrom` | `string` | Idioma de **destino** padrão |
+
+```lua
+["google_translate"] = {
+    ['languageTo'] = 'pt',   -- escrevendo em português
+    ['languageFrom'] = 'en', -- traduzindo para inglês
+}
+```
+
+---
+
+### 12.11 Configurações (`config.apps.settings`)
+
+| Opção | Tipo | Descrição |
+|---|---|---|
+| `timeToResetPhone` | `number` | Tempo em segundos para formatar o celular |
+
+**`profileInfos` — Informações do perfil**
+
+| Opção | Tipo | Descrição |
+|---|---|---|
+| `getProfileName` | `function(player)` | Retorna o nome exibido no perfil do app Settings |
+| `getProfileID` | `function(player)` | Retorna o ID exibido no perfil |
+| `getProfilePhoto` | `function(player)` | Retorna o caminho da foto de perfil |
+
+**`notificacoes` — Configurações de notificações in-app**
+
+Lista de grupos de notificações que o jogador pode ativar/desativar. Cada grupo tem `collumName` (título da coluna ou `false`) e itens com `name` e `data` (chave salva nas preferências).
+
+**`wallpaperDefaults` — Wallpapers disponíveis**
+
+Lista de wallpapers padrão. Cada item tem `{wallpaper = N}` onde `N` é o número do arquivo de wallpaper em `assets/images/wallpapers/`.
+
+```lua
+["settings"] = {
+    ['timeToResetPhone'] = 5,
+    ["profileInfos"] = {
+        ["getProfileName"] = function(player)
+            return getAccountName(getPlayerAccount(player))
+        end,
+        ["getProfileID"] = function(player)
+            return getElementData(player, "id") or "#0000"
+        end,
+        ["getProfilePhoto"] = function(player)
+            return "assets/images/apps/settings/avatar.png"
+        end
+    },
+}
+```
+
+---
+
+## 13. Setup (Aparência Inicial)
+
+Configura as opções de personalização que aparecem durante o setup inicial do celular.
+
+### 13.1 Capas disponíveis
+
+Cada capa tem dois campos de cor: `colorShowcase` (cor de destaque exibida na tela de seleção) e `colorBackground` (cor de fundo da capa aplicada ao celular). Ambos usam o formato `tocolor(R, G, B, A)`.
+
+O sistema vem com as seguintes 10 capas padrão:
+
+| # | Nome | Preview (R, G, B) |
+|---|---|---|
+| 1 | Preto | `(27, 27, 27)` |
+| 2 | Prata | `(205, 205, 205)` |
+| 3 | Azul-glacial | `(155, 225, 223)` |
+| 4 | Roxo-escuro | `(82, 78, 102)` |
+| 5 | Caramelo | `(161, 122, 91)` |
+| 6 | Verde | `(66, 157, 97)` |
+| 7 | Azul-aço | `(85, 131, 160)` |
+| 8 | Vermelho-escuro | `(136, 56, 54)` |
+| 9 | Rosa | `(170, 96, 146)` |
+| 10 | Verde-claro | `(204, 224, 175)` |
+
+```lua
+config.setup.appearance.cases = {
+    {colorShowcase = tocolor(27, 27, 27, 255),    colorBackground = tocolor(27, 27, 27, 255)},
+    {colorShowcase = tocolor(205, 205, 205, 255),  colorBackground = tocolor(205, 205, 205, 255)},
+    {colorShowcase = tocolor(155, 225, 223, 255),  colorBackground = tocolor(155, 225, 223, 255)},
+    {colorShowcase = tocolor(82, 78, 102, 255),    colorBackground = tocolor(82, 78, 102, 255)},
+    {colorShowcase = tocolor(161, 122, 91, 255),   colorBackground = tocolor(161, 122, 91, 255)},
+    {colorShowcase = tocolor(66, 157, 97, 255),    colorBackground = tocolor(66, 157, 97, 255)},
+    {colorShowcase = tocolor(85, 131, 160, 255),   colorBackground = tocolor(85, 131, 160, 255)},
+    {colorShowcase = tocolor(136, 56, 54, 255),    colorBackground = tocolor(136, 56, 54, 255)},
+    {colorShowcase = tocolor(170, 96, 146, 255),   colorBackground = tocolor(170, 96, 146, 255)},
+    {colorShowcase = tocolor(204, 224, 175, 255),  colorBackground = tocolor(204, 224, 175, 255)},
+}
+```
+
+Para **adicionar** uma nova capa, acrescente uma nova entrada com os valores RGBA desejados.
+
+---
+
+## 14. Tela de Bloqueio (Lockscreen)
+
+### 14.1 Sistema de Hacking
+
+| Opção | Tipo | Descrição |
+|---|---|---|
+| `config.lockscreen.hacking.percentageDefault` | `number` | Porcentagem padrão de chance de hackear o celular (0-100) |
+
+---
+
+## 15. Widgets
+
+Configura o painel de widgets deslizante. O painel é organizado em **linhas** (`rows`), e cada linha pode ter múltiplos widgets lado a lado.
+
+### Estrutura de uma linha:
+
+| Campo | Tipo | Descrição |
+|---|---|---|
+| `spacingHeight` | `number` | Espaçamento vertical entre esta linha e a próxima |
+| `[N]` | `table` | Cada índice numérico é um widget nesta linha |
+
+### Campos de cada widget:
+
+| Campo | Tipo | Descrição |
+|---|---|---|
+| `nameWidget` | `string` | Nome do widget (deve corresponder a um widget registrado) |
+| `description` | `string` | Texto descritivo exibido abaixo do nome |
+| `width` | `number` | Largura em unidades de grade (1 a 4) |
+| `height` | `number` | Altura em unidades de grade |
+| `spacingItem` | `number` *(opcional)* | Espaçamento lateral deste item |
+
+```lua
+config.widgetsPanel = {
+    -- Linha 1: widget do Spotify (2x2) + outro widget (2x2)
+    {
+        spacingHeight = 0,
+        [1] = {nameWidget = "Spotify", description = "Que tal músicas?", width = 2, height = 2, spacingItem = 23},
+        [2] = {nameWidget = "Clock", description = "Horário atual", width = 2, height = 2},
+    },
+    -- Linha 2: widget grande (4x1)
+    {
+        spacingHeight = 10,
+        [1] = {nameWidget = "Battery", description = "Nível da bateria", width = 4, height = 1},
+    },
+}
+```
+
+<Note>
+O `width` define quantas colunas do grid o widget ocupa. Com `width = 4`, o widget ocupa a linha inteira. Com `width = 2`, dois widgets cabem lado a lado.
+</Note>
+
+---
+
+## 16. Cores
+
+Define a paleta de cores global do sistema.
+
+| Chave | Descrição |
+|---|---|
+| `config.colors.black` | Cor preta principal |
+| `config.colors.white` | Cor branca principal |
+| `config.colors.green` | Cor de sucesso/confirmação |
+| `config.colors.red` | Cor de erro/alerta |
+
+As cores são usadas internamente na interface e podem ser sobrescritas para personalização visual.
+
+---
+
+## 17. Tradução e Idioma
+
+### 17.1 Idioma padrão
+
+| Opção | Tipo | Descrição |
+|---|---|---|
+| `translate.language` | `string` | Idioma padrão. Ex: `"PT"`, `"EN"`, `"ES"` |
+| `translate.currency` | `string` | Símbolo da moeda. Ex: `"R$"`, `"$"` |
+
+### 17.2 Textos do sistema
+
+Os textos da interface são armazenados em `translate.texts`. Você pode alterar qualquer texto para o idioma do seu servidor.
+
+```lua
+translate.texts = {
+    not_have_phone = 'Você não possui um celular.',
+    openButtonPrompt = 'Pressione [K] para abrir o celular',
+    -- ... demais textos
+}
+```
+
+### 17.3 Saudações por horário
+
+```lua
+translate.greetings = {
+    {from = 6,  to = 12, text = 'Bom dia'},
+    {from = 12, to = 18, text = 'Boa tarde'},
+    {from = 18, to = 24, text = 'Boa noite'},
+    {from = 0,  to = 6,  text = 'Boa madrugada'},
+}
+```
+
+---
+
+## Dicas Finais
+
+- Após qualquer alteração no `config/settings.lua`, você deve reiniciar o resource com `restart sqh_phone`.
+- **Nunca** ative `config.isResetDatabase = true` em produção com dados reais — isso apagará todo o banco de dados do sistema.
+- Para integrar com sistemas de inventário externos, use a combinação de `config.disableKeyOpen = true` + `bindPhonePlayer` e `unbindPhonePlayer` via exports.
+- Se o celular não abrir após configurar `verifyToOpen`, certifique-se que a função retorna `true` para os players corretos.

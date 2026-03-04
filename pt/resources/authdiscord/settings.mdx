@@ -1,0 +1,416 @@
+---
+title: Configurações Auth Discord System
+description: "Guia completo do config/settings.lua do Auth Discord System."
+---
+
+<img
+  src="/images/authdiscord-system.png"
+  alt="Hero Dark"
+/>
+
+## Resolva problemas comuns
+
+<CardGroup cols={2}>
+  <Card
+    title="Resource não inicia"
+    icon="gear"
+    href="/pt/start"
+  >
+   Está com problemas para iniciar o seu produto? Clique aqui
+  </Card>
+    <Card
+    title="Funções exportáveis"
+    icon="gear"
+    href="/pt/resources/auth-discord/exports"
+  >
+   Precisa integrar o Auth Discord System com outro script? Clique aqui
+  </Card>
+</CardGroup>
+
+<img
+  src="/images/ashy-help.png"
+  alt="Hero Dark"
+/>
+
+## Sobre o sistema
+O Auth Discord System autentica jogadores via Discord automaticamente — sem login manual, sem senha. O jogador recebe um código no jogo, digita no canal do Discord e a conta é liberada.
+
+## Visão Geral
+
+Este guia cobre **todo o arquivo** `config/settings.lua`.
+
+Objetivo:
+- Você entender exatamente o que cada opção muda.
+- Você saber quando usar `true` ou `false`.
+- Você configurar o sistema sem precisar entrar em detalhes técnicos.
+
+## Antes de Começar
+
+- Arquivo de configuração: `config/settings.lua`
+- Depois de alterar a config: reinicie o resource (`restart sqh_authdiscord`)
+- Regra geral:
+  - `true` = ativa a função
+  - `false` = desativa a função
+
+---
+
+## 1) `license`
+
+Configuração da licença de ativação do sistema.
+
+| Opção | Descrição |
+|---|---|
+| `license.Email` | E-mail da conta na Squash Company utilizado na compra do produto |
+| `license.Key` | Chave de licença do produto |
+
+```lua
+license = {
+    ["Email"] = "seu@email.com",
+    ["Key"] = "SQUASH-xxxx-xxxx",
+}
+```
+
+---
+
+## 2) `config.infobox`
+
+Funções de notificação. Configure aqui o sistema de alert/toast do seu servidor.
+
+| Callback | Quando é chamado |
+|---|---|
+| `server` | Notificações enviadas pelo lado server (recebe `source`, `message`, `type`) |
+| `client` | Notificações enviadas pelo lado client (recebe `source`, `message`, `type`) |
+
+`type` pode ser: `'success'`, `'error'`, `'info'`, `'warning'`
+
+```lua
+config.infobox = {
+    ['server'] = function(source, message, type)
+        exports["s_infobox"]:addInsInfobox(source, message, type)
+    end,
+    ['client'] = function(source, message, type)
+        exports["s_infobox"]:addIncInfobox(message, type)
+    end,
+}
+```
+
+---
+
+## 3) `config.events`
+
+### `onVerifiedPlayer`
+
+Callback executado quando o player é verificado/autenticado com sucesso.
+
+```lua
+config.events = {
+    onVerifiedPlayer = function(player)
+        -- executado assim que o jogador finaliza a autenticação
+        -- ex.: abrir seletor de personagens, liberar acesso ao servidor
+        exports['sqh_multicharacters']:openPanelCharacters(player)
+    end,
+}
+```
+
+> **Importante**: Este é o ponto central da integração. Coloque aqui a função que deve rodar após o login — normalmente a abertura do painel de personagens ou liberação do jogador.
+
+---
+
+## 4) Opções de Abertura Automática
+
+Define quando o painel de autenticação deve abrir automaticamente.
+
+| Opção | `true` | `false` |
+|---|---|---|
+| `config.onPlayerJoin` | Abre o painel assim que o jogador **entra no servidor** (`onPlayerJoin`) | Não abre automaticamente na entrada |
+| `config.onPlayerLogin` | Abre o painel assim que o jogador **faz login na conta MTA** (`onPlayerLogin`) | Não abre automaticamente no login |
+
+> **Recomendação**: Em servidores com sistema de login próprio, use `onPlayerLogin = true` e `onPlayerJoin = false`.
+
+---
+
+## 5) `config.discordLink`
+
+Link de convite do Discord exibido no painel de autenticação.
+
+```lua
+config.discordLink = 'https://discord.gg/seuservidor'
+```
+
+---
+
+## 6) `config.createAccountMTA`
+
+| Opção | `true` | `false` |
+|---|---|---|
+| `createAccountMTA` | Cria automaticamente uma conta MTA para o jogador após o registro e faz login automático | Não cria conta MTA — você gerencia o login manualmente |
+
+> Se `true`, o campo de nome digitado no Discord será usado como nome da conta MTA. Por isso, ao configurar o bot do Discord, ative a opção de digitar o nome.
+
+---
+
+## 7) `config.timeVerify`
+
+Tempo em **segundos** que o sistema aguarda antes de verificar se o player entrou no Discord do servidor.
+
+```lua
+config.timeVerify = 5 -- padrão: 5 segundos
+```
+
+---
+
+## 8) `config.playerInDiscord`
+
+| Opção | `true` | `false` |
+|---|---|---|
+| `playerInDiscord` | Verifica se o jogador está no servidor Discord antes de liberar o acesso | Libera o acesso sem verificar presença no Discord |
+
+> Com `true`, se o player não estiver no Discord, a tela de "você precisa entrar no Discord" é exibida.
+
+---
+
+## 9) `config.blockChangeName`
+
+| Opção | `true` | `false` |
+|---|---|---|
+| `blockChangeName` | Impede que o jogador mude o nome no jogo | O jogador pode mudar o nome normalmente |
+
+> Se `false` e `config.infosPlayer.changeNameActive = true`, a mudança de nome no jogo será sincronizada automaticamente com o Discord.
+
+---
+
+## 10) `config.discordInfos`
+
+### 10.1 Cargos automáticos
+
+| Opção | Descrição |
+|---|---|
+| `onRegisterSetOffices` | Lista de IDs de cargos **dados** ao jogador quando ele é registrado/verificado |
+| `onRegisterRemoveOffices` | Lista de IDs de cargos **removidos** do jogador quando ele é registrado |
+
+```lua
+discordInfos = {
+    onRegisterSetOffices = {'ID_DO_CARGO_MEMBRO'},
+    onRegisterRemoveOffices = {'ID_DO_CARGO_NAO_VERIFICADO'},
+}
+```
+
+### 10.2 Troca de serial
+
+| Opção | Descrição |
+|---|---|
+| `changeSerial` | Lista de Discord IDs autorizados a trocar o serial vinculado à conta pelo bot |
+
+Deixe vazio `{}` se não quiser usar este recurso.
+
+### 10.3 Canais do Discord
+
+| Opção | Descrição |
+|---|---|
+| `channelLogs` | ID do canal onde o bot registrará logs de autenticações |
+| `channelMessage` | ID do canal onde o bot enviará as mensagens de verificação para os jogadores |
+
+### 10.4 Formatação e nome
+
+| Opção | Tipo | Descrição |
+|---|---|---|
+| `formatID` | `string` | Formato do nome exibido no Discord após autenticação. Use `$id` e `$name`. Ex: `"{$id} - $name"` |
+| `playerName` | `boolean` | Se `true`, o bot pedirá ao jogador para digitar seu nome durante o processo |
+| `setDiscordNameInGame` | `boolean` | Se `true`, ao entrar no jogo o nome do Discord será aplicado no nick do jogador |
+
+### 10.5 `translates` — Textos do bot no Discord
+
+Textos exibidos pelo bot durante o fluxo de autenticação.
+
+| Opção | Descrição |
+|---|---|
+| `descriptionMessage` | Texto principal da mensagem enviada no canal (suporta Markdown do Discord) |
+| `imageMain` | URL da imagem exibida na mensagem principal |
+| `imageFooter` | URL da imagem de rodapé |
+
+### 10.6 `messages` — Mensagens operacionais
+
+Mensagens enviadas em situações específicas do fluxo.
+
+| Chave | Quando é exibida |
+|---|---|
+| `confirmInfos` | Ao solicitar confirmação de dados |
+| `digitCode` | Ao pedir o código de verificação |
+| `register_success` | Após a conta ser registrada com sucesso |
+| `name_unavailable` | Quando o nome escolhido já está em uso |
+| `code_failed` | Quando ocorre falha na confirmação do código |
+
+---
+
+## 11) `config.nameMainConfigs`
+
+Configuração do comando auxiliar para obter o nome da conta interna.
+
+| Opção | Tipo | Descrição |
+|---|---|---|
+| `commandActive` | `boolean` | Ativa o comando `/vernomedaconta`. Deixe `true` apenas durante a configuração inicial do serial |
+| `havePermission` | `function(player)` | Retorna `true` se o player tem permissão para usar o comando |
+
+> Após usar o comando para configurar o serial, volte `commandActive = false`.
+
+```lua
+config.nameMainConfigs = {
+    commandActive = false,
+    havePermission = function(player)
+        return isObjectInACLGroup('user.'..getAccountName(getPlayerAccount(player)), aclGetGroup('Admin'))
+    end
+}
+```
+
+---
+
+## 12) `config.infosPlayer`
+
+Configurações sobre o nome e ID do player no jogo.
+
+### 12.1 `getNameOption` — Como o nome é definido
+
+| Valor | Comportamento |
+|---|---|
+| `'Discord'` | O nome do Discord do jogador é usado como nome no jogo |
+| `'Game'` | O nome atual do jogador no jogo é mantido (uso de `getNamePlayerFunction`) |
+| `'DiscordDigit'` | O nome digitado pelo jogador no input do Discord é usado |
+
+```lua
+config.infosPlayer.getNameOption = 'Discord'
+```
+
+### 12.2 `getNamePlayerFunction`
+
+Função usada quando `getNameOption = 'Game'` para obter o nome do jogador.
+
+```lua
+config.infosPlayer.getNamePlayerFunction = function(player)
+    return getPlayerName(player)
+end
+```
+
+### 12.3 Sincronização de nome e ID
+
+| Opção | `true` | `false` |
+|---|---|---|
+| `changeNameActive` | Quando o jogador mudar o nome no jogo, o nome no Discord é atualizado automaticamente | Mudança de nome no jogo não afeta o Discord |
+| `setIDInDiscord` | O ID do jogador (retornado por `getIDFunction`) é incluído no nome do Discord | O ID não é adicionado ao nome |
+
+```lua
+config.infosPlayer.getIDFunction = function(player)
+    return getElementData(player, 'ID') or 'N/A'
+end
+```
+
+---
+
+## 13) `config.designInfos`
+
+Configurações visuais do painel de autenticação.
+
+| Opção | Tipo | Descrição |
+|---|---|---|
+| `design` | `number` | Escolha o layout do painel: `1` ou `2` (são designs diferentes) |
+| `color_main` | `string` | Cor principal do painel (hex). Ex: `'#FF145B'` |
+
+### 13.1 `logo`
+
+| Opção | Tipo | Descrição |
+|---|---|---|
+| `x`, `y` | `number` | Posição da logo na tela |
+| `w`, `h` | `number` | Largura e altura da logo |
+| `image` | `string` | Caminho para o arquivo de imagem |
+| `primaryColor` | `boolean` | Se `true`, a logo recebe a cor principal definida em `color_main` |
+
+### 13.2 `socialMedia`
+
+Lista de links de redes sociais exibidos no painel.
+
+```lua
+config.designInfos.socialMedia = {
+    {icon = 'discord', url = 'https://discord.gg/seuservidor'},
+    {icon = 'youtube', url = 'https://youtube.com/seucanal'},
+    {icon = 'instagram', url = 'https://instagram.com/seuservidor'},
+}
+```
+
+---
+
+## 14) `colors`
+
+Paleta de cores da interface de autenticação.
+
+| Opção | Descrição |
+|---|---|
+| `white` | Cor branca base |
+| `black` | Cor preta base |
+| `primary` | Cor principal (herdada de `config.designInfos.color_main`) |
+| `pink` | Cor rosa de destaque |
+| `primaryText` | Cor principal de texto |
+| `secondaryText` | Cor secundária de texto (40% de opacidade) |
+| `pinkBackground` | Fundo rosa com baixa opacidade (15%) |
+| `pinkStroke` | Borda rosa (35%) |
+| `background_opacity` | Fundo escuro do painel (90% de opacidade) |
+| `primary_opacity` | Fundo da cor primária com baixa opacidade (7%) |
+| `whiteOpacity` | Branco com baixa opacidade (4%) |
+| `whiteStroke` | Borda branca (8%) |
+| `whiteBorder` | Borda branca mais visível (20%) |
+
+Formato das cores: `'#RRGGBB XX%'` onde `XX%` é a opacidade.
+
+> As cores `primary` e `primary_opacity` são geradas automaticamente a partir de `config.designInfos.color_main`.
+
+---
+
+## 15) `translate`
+
+Define o idioma padrão e os textos da interface do painel.
+
+### 15.1 Idioma padrão
+
+| Opção | Valor | Descrição |
+|---|---|---|
+| `translate.language` | `'PT'` | Português (Brasil) |
+| `translate.language` | `'EN'` | Inglês |
+| `translate.language` | `'ES'` | Espanhol |
+| `translate.language` | `'TR'` | Turco |
+| `translate.language` | `'HU'` | Húngaro |
+| `translate.language` | `'PT-PT'` | Português de Portugal |
+
+```lua
+translate = {
+    language = 'PT',
+}
+```
+
+### 15.2 Textos por idioma
+
+Cada bloco de idioma contém as chaves de texto exibidas na interface.
+
+| Chave | Onde aparece |
+|---|---|
+| `code_confirm` | Título da tela de código de confirmação |
+| `click_copy` | Instrução abaixo do código |
+| `copy_discord` | Botão de copiar link do Discord |
+| `copy_code` | Botão de copiar código |
+| `digit_code_text` | Texto explicativo de como usar o código no Discord |
+| `left_server` | Botão de sair do servidor |
+| `disconnect` | Texto de desconectar |
+| `confirming_account` | Título da tela de confirmação em andamento |
+| `logged_success` | Notificação de login realizado com sucesso |
+| `waiting_join` | Tela de aguardando entrada no Discord |
+| `necessarie_join` | Mensagem quando o jogador não está no Discord do servidor |
+| `click_to_copy` | Texto de ação ao clicar no código |
+| `sinc_discord_success` | Notificação de sincronização com Discord bem-sucedida |
+| `sinc_name_discord` | Notificação de nome sincronizado com Discord |
+
+---
+
+## Dicas Finais
+
+- Após qualquer alteração no `config/settings.lua`, reinicie o resource com `restart sqh_authdiscord`.
+- O `config.events.onVerifiedPlayer` é o coração da integração — sem configurá-lo corretamente, o player será autenticado mas não terá acesso liberado no servidor.
+- Se usar `createAccountMTA = true`, certifique-se de que o bot do Discord está configurado para pedir o nome do jogador (`playerName = true`), pois o nome digitado será o nome da conta MTA.
+- Para sincronização de nome com Discord funcionando corretamente, `blockChangeName` deve ser `false` e `infosPlayer.changeNameActive` deve ser `true`.
+- O `nameMainConfigs.commandActive` deve ficar `false` em produção — ative apenas durante a configuração inicial do serial.

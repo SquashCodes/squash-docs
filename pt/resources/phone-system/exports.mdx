@@ -1,0 +1,532 @@
+---
+title: Exports Phone System
+description: "Adquiriu o Phone System e está com dúvidas sobre as funções exportáveis? você está no lugar certo!"
+---
+
+## Resolva problemas comuns
+
+<CardGroup cols={2}>
+  <Card
+    title="Resource não inicia"
+    icon="gear"
+    href="/pt/start"
+  >
+   Está com problemas para iniciar o seu produto? Clique aqui
+  </Card>
+    <Card
+    title="Configurar o resource"
+    icon="gear"
+    href="/pt/resources/phone#como-configurar-o-resource"
+  >
+   Está com dúvidas de como configurar algo no sistema? Clique aqui
+  </Card>
+</CardGroup>
+
+<img
+  src="/images/ashy-help.png"
+  alt="Hero Dark"
+/>
+
+## Sobre o sistema
+O Phone System é um sistema completo de celular para MTA, com aplicativos como WhatsApp, Instagram, Spotify, Paypal, Uber, Blaze e muito mais.
+
+Com as funções exportadas, você pode:
+- Dar/remover celulares para jogadores de forma programática (útil para sistemas de inventário, empregos, etc.);
+- Abrir o celular para um jogador a partir de outro script;
+- Buscar o número de telefone ou ID do celular por player;
+- Buscar o player com base no ID ou número do celular;
+- Vincular/desvincular o keybind de abrir celular manualmente;
+- Gerenciar a JBL do Spotify (equipar, desequipar, dropar);
+- Controlar redes Wi-Fi via script (criar, desconectar, verificar);
+- Verificar/marcar contas do Instagram como verificadas.
+
+## Funções Exportadas
+
+### Server-side
+
+- [buyPhone](#buyphone) -> `Dá um celular para o player`
+- [openPhone](#openphone) -> `Abre o celular para um player`
+- [removePhonePlayer](#removephoneplayer) -> `Remove o celular de um player`
+- [getPhoneNumberByID](#getphonenumberbyid) -> `Retorna o número de telefone pelo ID do celular ou player`
+- [getPhoneIDByPlayer](#getphoneIDbyplayer) -> `Retorna a lista de IDs de celulares de um player`
+- [getPlayerByPhoneID](#getplayerbyphoneid) -> `Retorna o elemento player pelo ID do celular`
+- [bindPhonePlayer](#bindphoneplayer) -> `Ativa o keybind de abrir celular para o player`
+- [unbindPhonePlayer](#unbindphoneplayer) -> `Remove o keybind de abrir celular do player`
+- [managerWifiController](#managerwificontroller) -> `Gerencia redes Wi-Fi do servidor`
+- [equipSpotifyJBL](#equipspotifyjbl) -> `Equipa a JBL do Spotify no player`
+- [unEquipSpotifyJBL](#unequipspotifyjbl) -> `Desequipa a JBL do Spotify do player`
+- [dropSpotifyJBL](#dropspotifyjbl) -> `Dropa a JBL do Spotify no chão`
+- [instagramVerifyAccount](#instagramverifyaccount) -> `Verifica ou desverifica uma conta do Instagram`
+
+
+---
+
+## buyPhone
+
+**Side:** `server`
+
+**Syntax**
+```lua
+exports['sqh_phone']:buyPhone(player)
+```
+
+**Required arguments**
+- `player` (`player`): jogador que receberá o celular.
+
+**Comportamento**
+- Gera um número de telefone aleatório com base no `config.system.numberType`.
+- Cria o celular na database e vincula à conta do player.
+- Respeita a opção `config.haveOnlyOnePhone`: se `true`, impede que o player tenha mais de um celular.
+- Executa o callback `config.events.onBuyPhone(player)` após a criação.
+
+**Return**
+- Não há retorno explícito. O celular é criado na database e vinculado ao player.
+
+**Example**
+```lua
+-- SERVER-SIDE
+addCommandHandler('darcell', function(player)
+    exports['sqh_phone']:buyPhone(player)
+    outputChatBox('Celular dado com sucesso!', player)
+end)
+```
+
+```lua
+-- SERVER-SIDE (com inventário externo)
+addEventHandler('onPlayerPickUpPickup', root, function(pickup)
+    if pickup == phonePicup then
+        exports['sqh_phone']:buyPhone(source)
+    end
+end)
+```
+
+
+---
+
+## openPhone
+
+**Side:** `server`
+
+**Syntax**
+```lua
+exports['sqh_phone']:openPhone(player, phoneID, configurationsOpen, forceOpen)
+```
+
+**Required arguments**
+- `player` (`player`): jogador que terá o celular aberto.
+
+**Optional arguments**
+- `phoneID` (`number`): ID específico do celular a abrir. Se não informado, abre o primeiro celular da conta do player.
+- `configurationsOpen` (`table`): configurações adicionais de abertura.
+- `forceOpen` (`boolean`): força a abertura mesmo com restrições.
+
+**Comportamento**
+- Se o celular já tiver passado pela configuração inicial, abre na tela de bloqueio.
+- Se não, inicia o fluxo de configuração inicial (setup).
+- Se o player não tiver celular, envia a mensagem `translate.not_have_phone`.
+
+**Return**
+- Não há retorno explícito.
+
+**Example**
+```lua
+-- SERVER-SIDE
+addCommandHandler('abrircell', function(player)
+    exports['sqh_phone']:openPhone(player)
+end)
+```
+
+```lua
+-- SERVER-SIDE (abrir celular específico)
+addCommandHandler('abrircellid', function(player, _, phoneID)
+    exports['sqh_phone']:openPhone(player, tonumber(phoneID))
+end)
+```
+
+
+---
+
+## removePhonePlayer
+
+**Side:** `server`
+
+**Syntax**
+```lua
+local success = exports['sqh_phone']:removePhonePlayer(player, phoneID)
+```
+
+**Required arguments**
+- `player` (`player`): jogador que terá o celular removido.
+
+**Optional arguments**
+- `phoneID` (`number`): ID do celular a remover. Se não informado, remove o primeiro celular da conta do player.
+
+**Return**
+- `true` se o celular foi removido com sucesso.
+- `false` em falha (player sem celular, ID inválido, etc.).
+
+**Example**
+```lua
+-- SERVER-SIDE
+addCommandHandler('removercell', function(player)
+    local success = exports['sqh_phone']:removePhonePlayer(player)
+    outputChatBox(success and 'Celular removido!' or 'Falha ao remover celular', player)
+end)
+```
+
+```lua
+-- SERVER-SIDE (remover celular específico por ID)
+addCommandHandler('removercellid', function(player, _, phoneID)
+    local success = exports['sqh_phone']:removePhonePlayer(player, tonumber(phoneID))
+    outputChatBox(success and 'Celular removido!' or 'Falha ao remover celular.', player)
+end)
+```
+
+
+---
+
+## getPhoneNumberByID
+
+**Side:** `server`
+
+**Syntax**
+```lua
+local number = exports['sqh_phone']:getPhoneNumberByID(player, phoneID)
+```
+
+**Required arguments**
+- `player` (`player`): jogador alvo.
+
+**Optional arguments**
+- `phoneID` (`number`): ID do celular. Se não informado, busca o número do primeiro celular do player.
+
+**Return**
+- `string` com o número de telefone, ex: `"91234-5678"`.
+- `false` se não encontrado.
+
+**Example**
+```lua
+-- SERVER-SIDE
+addCommandHandler('meunum', function(player)
+    local number = exports['sqh_phone']:getPhoneNumberByID(player)
+    outputChatBox('Seu número: ' .. tostring(number), player)
+end)
+```
+
+```lua
+-- SERVER-SIDE (buscar número por ID de celular específico)
+addCommandHandler('numporid', function(player, _, phoneID)
+    local number = exports['sqh_phone']:getPhoneNumberByID(player, tonumber(phoneID))
+    outputChatBox('Número do celular ' .. tostring(phoneID) .. ': ' .. tostring(number), player)
+end)
+```
+
+
+---
+
+## getPhoneIDByPlayer
+
+**Side:** `server`
+
+**Syntax**
+```lua
+local phoneIDs = exports['sqh_phone']:getPhoneIDByPlayer(player)
+```
+
+**Required arguments**
+- `player` (`player`): jogador alvo.
+
+**Return**
+- `table` com todos os IDs de celular vinculados ao player, ex: `{1, 5, 12}`.
+- Tabela vazia `{}` se o player não tiver celular ou não estiver logado.
+
+**Example**
+```lua
+-- SERVER-SIDE
+addCommandHandler('meuscells', function(player)
+    local ids = exports['sqh_phone']:getPhoneIDByPlayer(player)
+    if ids and #ids > 0 then
+        for i, id in ipairs(ids) do
+            outputChatBox('Celular ' .. i .. ': ID ' .. tostring(id), player)
+        end
+    else
+        outputChatBox('Você não tem celular.', player)
+    end
+end)
+```
+
+
+---
+
+## getPlayerByPhoneID
+
+**Side:** `server`
+
+**Syntax**
+```lua
+local player = exports['sqh_phone']:getPlayerByPhoneID(phoneID)
+```
+
+**Required arguments**
+- `phoneID` (`number`): ID do celular.
+
+**Return**
+- `player` elemento do jogador que possui o celular, se ele estiver online.
+- `false` se o celular não existir ou o dono não estiver online.
+
+**Example**
+```lua
+-- SERVER-SIDE
+addCommandHandler('donodocell', function(player, _, phoneID)
+    local owner = exports['sqh_phone']:getPlayerByPhoneID(tonumber(phoneID))
+    if owner then
+        outputChatBox('Dono do celular ' .. phoneID .. ': ' .. getPlayerName(owner), player)
+    else
+        outputChatBox('Dono do celular não está online ou celular não existe.', player)
+    end
+end)
+```
+
+
+---
+
+## bindPhonePlayer
+
+**Side:** `server`
+
+**Syntax**
+```lua
+exports['sqh_phone']:bindPhonePlayer(player)
+```
+
+**Required arguments**
+- `player` (`player`): jogador que terá o keybind ativado.
+
+**Comportamento**
+- Ativa o keybind definido em `config.keyOpen` para o player.
+- Útil quando `config.disableKeyOpen` é `true` e você quer ativar manualmente apenas para alguns players (ex.: players que possuem celular no inventário).
+
+**Example**
+```lua
+-- SERVER-SIDE (ativar keybind quando player pegar celular no inventário)
+addEventHandler('onPlayerEquipItem', root, function(itemName)
+    if itemName == 'celular' then
+        exports['sqh_phone']:bindPhonePlayer(source)
+    end
+end)
+```
+
+
+---
+
+## unbindPhonePlayer
+
+**Side:** `server`
+
+**Syntax**
+```lua
+exports['sqh_phone']:unbindPhonePlayer(player)
+```
+
+**Required arguments**
+- `player` (`player`): jogador que terá o keybind removido.
+
+**Comportamento**
+- Remove o keybind definido em `config.keyOpen` do player.
+- Útil para remover o keybind quando o player dropar ou usar o celular no inventário.
+
+**Example**
+```lua
+-- SERVER-SIDE (remover keybind quando player dropar o celular)
+addEventHandler('onPlayerDropItem', root, function(itemName)
+    if itemName == 'celular' then
+        exports['sqh_phone']:unbindPhonePlayer(source)
+    end
+end)
+```
+
+
+---
+
+## managerWifiController
+
+**Side:** `server`
+
+**Syntax**
+```lua
+exports['sqh_phone']:managerWifiController(tableArguments)
+```
+
+**Required arguments**
+- `tableArguments` (`table`): tabela com os argumentos da ação a ser executada. O campo `type` define a ação.
+
+**Tipos disponíveis (`type`)**
+
+### `'creationNetwork'` — Criar uma rede Wi-Fi
+
+Campos obrigatórios:
+- `type` = `'creationNetwork'`
+- `name` (`string`): nome da rede.
+- `position` (`table`): posição e tamanho da área de cobertura.
+  - `positionX`/`positionY` (`number`): coordenadas fixas (opcional, se não informado usa a posição do source).
+  - `width` (`number`): largura da área.
+  - `height` (`number`): altura da área.
+
+Campos opcionais:
+- `password` (`string`): senha da rede (padrão: sem senha).
+- `public` (`boolean`): se a rede é pública.
+- `networkType` (`string`): tipo da rede.
+- `player` (`player`): player de referência (quando chamado sem `source`).
+
+**Return**
+- `true` em sucesso.
+
+**Exemplo — criar rede**
+```lua
+-- SERVER-SIDE
+addCommandHandler('criawifi', function(player, _, name)
+    local px, py = getElementPosition(player)
+    exports['sqh_phone']:managerWifiController({
+        type = 'creationNetwork',
+        name = name or 'MeuWifi',
+        password = '1234',
+        public = false,
+        networkType = 'home',
+        player = player,
+        position = {
+            width = 30,
+            height = 30
+        }
+    })
+    outputChatBox('Rede criada!', player)
+end)
+```
+
+
+---
+
+## equipSpotifyJBL
+
+**Side:** `server`
+
+**Syntax**
+```lua
+exports['sqh_phone']:equipSpotifyJBL(player)
+```
+
+**Required arguments**
+- `player` (`player`): jogador que irá equipar a JBL.
+
+**Comportamento**
+- Equipa o model da JBL (definido em `config.jblModelObject`) no corpo do player.
+- Ativa o sistema de bluetooth para o player.
+
+**Example**
+```lua
+-- SERVER-SIDE
+addCommandHandler('equiparJBL', function(player)
+    exports['sqh_phone']:equipSpotifyJBL(player)
+end)
+```
+
+
+---
+
+## unEquipSpotifyJBL
+
+**Side:** `server`
+
+**Syntax**
+```lua
+exports['sqh_phone']:unEquipSpotifyJBL(player)
+```
+
+**Required arguments**
+- `player` (`player`): jogador que irá desequipar a JBL.
+
+**Comportamento**
+- Remove o model da JBL do corpo do player sem dropar no chão.
+
+**Example**
+```lua
+-- SERVER-SIDE
+addCommandHandler('guardarJBL', function(player)
+    exports['sqh_phone']:unEquipSpotifyJBL(player)
+end)
+```
+
+
+---
+
+## dropSpotifyJBL
+
+**Side:** `server`
+
+**Syntax**
+```lua
+exports['sqh_phone']:dropSpotifyJBL(player)
+```
+
+**Required arguments**
+- `player` (`player`): jogador que irá dropar a JBL.
+
+**Comportamento**
+- Remove a JBL do corpo do player e a dropa no chão na posição do player.
+- Cria um marker no chão para que outros players possam pegar a JBL.
+
+**Example**
+```lua
+-- SERVER-SIDE
+addCommandHandler('droparJBL', function(player)
+    exports['sqh_phone']:dropSpotifyJBL(player)
+end)
+```
+
+
+---
+
+## instagramVerifyAccount
+
+**Side:** `server`
+
+**Syntax**
+```lua
+exports['sqh_phone']:instagramVerifyAccount(accountID, value)
+```
+
+**Required arguments**
+- `accountID` (`number`): ID da conta do Instagram.
+- `value` (`boolean`): `true` para verificar, `false` para remover a verificação.
+
+**Comportamento**
+- Define o status de verificação (selo azul) de uma conta do Instagram.
+
+**Return**
+- Retorno direto da função interna `instagram.verifyAccountAdmin`.
+
+**Example**
+```lua
+-- SERVER-SIDE
+addCommandHandler('verificarinsta', function(player, _, accountID)
+    exports['sqh_phone']:instagramVerifyAccount(tonumber(accountID), true)
+    outputChatBox('Conta verificada!', player)
+end)
+```
+
+```lua
+-- SERVER-SIDE (remover verificação)
+addCommandHandler('desverificarinsta', function(player, _, accountID)
+    exports['sqh_phone']:instagramVerifyAccount(tonumber(accountID), false)
+    outputChatBox('Verificação removida!', player)
+end)
+```
+
+
+---
+
+## Observações
+
+- Todas as exports exigem que o resource já tenha sido liberado pela proteção do sistema.
+- As funções acima seguem o que está exportado no `meta.xml` do `sqh_phone`.
+- Para que `buyPhone` e `removePhonePlayer` funcionem corretamente, o player deve estar logado em uma conta (não guest).
+- Os comandos `equiparJBL` e `droparJBL` já existem por padrão no script (quando `config.jblCommandsActive = true`). As exports são úteis para integração com outros sistemas.

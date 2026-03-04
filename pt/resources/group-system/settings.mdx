@@ -1,0 +1,503 @@
+---
+title: Configurações Groups System
+description: "Guia completo dos arquivos config/settings.lua e config/main.lua do Groups System."
+---
+
+
+## Resolva problemas comuns
+
+<CardGroup cols={2}>
+  <Card
+    title="Resource não inicia"
+    icon="gear"
+    href="/pt/start"
+  >
+   Está com problemas para iniciar o seu produto? Clique aqui
+  </Card>
+    <Card
+    title="Configurar o resource"
+    icon="gear"
+    href="/pt/resources/groups#como-configurar-o-resource"
+  >
+   Está com dúvidas de como configurar algo no sistema? Clique aqui
+  </Card>
+</CardGroup>
+
+<img
+  src="/images/ashy-help.png"
+  alt="Hero Dark"
+/>
+
+## Sobre o sistema
+O Groups System é um sistema completo de gestão de grupos/organizações para servidores MTA:SA.
+Com ele, jogadores podem criar grupos, convidar membros, gerenciar cargos, finanças, calendário de eventos, chat interno, registros de ponto e muito mais — tudo através de uma interface visual intuitiva.
+
+## Visão Geral
+
+Este guia cobre **todo o arquivo** `config/settings.lua` e também o `config/main.lua`.
+
+Objetivo:
+- Você entender exatamente o que cada opção muda.
+- Você saber quando usar `true` ou `false`.
+- Você configurar o sistema sem precisar entrar em detalhes técnicos.
+
+## Antes de Começar
+
+- Arquivos de configuração: `config/settings.lua` e `config/main.lua`
+- Depois de alterar a config: reinicie o resource (`restart sqh_groups`)
+- Regra geral:
+  - `true` = ativa a função
+  - `false` = desativa a função
+
+---
+
+## `config/main.lua` — Banco de Dados
+
+O arquivo `config/main.lua` é onde você define a conexão com o banco de dados.
+
+### `serverConfig.connect`
+
+| Opção | O que muda |
+|---|---|
+| `database` | Tipo de banco de dados: `'sqlite'` ou `'mysql'` |
+| `sqlite_archive` | Caminho do arquivo SQLite (usado apenas quando `database = 'sqlite'`) |
+
+**Configuração com SQLite (padrão)**
+```lua
+serverConfig = {
+    connect = {
+        database = 'sqlite',
+        sqlite_archive = 'assets/database/Database.db'
+    }
+}
+```
+
+**Configuração com MySQL**
+```lua
+serverConfig = {
+    connect = {
+        database = 'mysql',
+        mysqlparameters = {
+            hostname = "127.0.0.1",  -- IP do servidor MySQL
+            username = "root",       -- Usuário com permissões admin
+            password = "suasenha",   -- Senha do usuário
+            database = "resources"   -- Nome da database
+        }
+    }
+}
+```
+
+---
+
+## `config/settings.lua`
+
+---
+
+## 1) `license`
+
+Sua licença de uso do produto.
+
+```lua
+license = {
+    ["Email"] = "seu@email.com",
+    ["Key"]   = "SQUASH-xxxx-xxxx",
+}
+```
+
+| Campo | Descrição |
+|---|---|
+| `Email` | E-mail cadastrado na compra |
+| `Key` | Chave de licença fornecida |
+
+---
+
+## 2) `integrations`
+
+Integrações opcionais com outros sistemas.
+
+| Opção | `true` | `false` |
+|---|---|---|
+| `sqh_accounts` | Ativa integração com o sistema sqh_accounts | Desativa (padrão) |
+
+---
+
+## 3) `config.panel`
+
+Controla como os painéis do sistema são abertos.
+
+| Opção | O que muda |
+|---|---|
+| `openType` | Como o painel principal abre: `'bind'` (tecla) ou `'command'` (comando) |
+| `keyOpen` | Tecla ou nome do comando para abrir o painel principal |
+| `openTypeStaff` | Como o painel staff abre: `'bind'` ou `'command'` |
+| `keyOpenStaff` | Tecla ou nome do comando para abrir o painel staff |
+| `permissionToOpenStaffPanel` | `true` exige permissão para abrir o painel staff |
+| `permissionType` | Como verificar a permissão: `'ACL'`, `'elementData'` ou `'Function'` |
+| `typeValue` | ElementData key (usado somente com `permissionType = 'elementData'`) |
+| `DataValue` | Valor/ACL a ser verificado |
+| `typeFunction` | Função customizada de verificação (usado somente com `permissionType = 'Function'`) |
+
+**Exemplo: painel principal com tecla, painel staff requer ACL**
+```lua
+["panel"] = {
+    openType = 'bind',
+    keyOpen = "F4",
+    openTypeStaff = 'bind',
+    keyOpenStaff = "F6",
+    ['permissionToOpenStaffPanel'] = true,
+    ['permissionType'] = 'ACL',
+    ['DataValue'] = 'Console', -- grupo ACL que pode acessar o painel staff
+}
+```
+
+---
+
+## 4) `config.notify`
+
+Define as funções de notificação do sistema. Você precisa apontar o exports de infobox/notify do seu servidor.
+
+| Função | Side | Descrição |
+|---|---|---|
+| `server` | Server | Chamada pelo server para notificar um jogador |
+| `client` | Client | Chamada pelo client para exibir uma notificação local |
+
+```lua
+["notify"] = {
+    ['server'] = function(source, type, message)
+        exports["s_infobox"]:addInsInfobox(source, message, type)
+    end,
+    ['client'] = function(type, message, source)
+        exports["s_infobox"]:addIncInfobox(message, type)
+    end,
+},
+```
+
+> Substitua os exports pelo sistema de notificação do seu servidor.
+
+---
+
+## 5) `config.avatars`
+
+Integração com sistema de avatares. Se você não utiliza o `sqh_avatars`, pode ignorar ou deixar como está.
+
+| Opção | Descrição |
+|---|---|
+| `resource` | Nome do resource de avatares |
+| `getAvatar` | Função que retorna o caminho da imagem de um avatar pelo ID |
+| `loadAvatars` | Função que retorna todos os avatares disponíveis |
+
+---
+
+## 6) `config.configurations`
+
+Seção principal de configurações do sistema de grupos.
+
+---
+
+### 6.1) `protectedGroups`
+
+Lista de nomes de grupos que **não podem ser criados** pelos jogadores via painel.
+
+```lua
+['protectedGroups'] = {
+    'STAFF',
+    'Console',
+},
+```
+
+> Use isso para proteger nomes de grupos reservados para uso interno do servidor.
+
+---
+
+### 6.2) `aclConfigurations`
+
+Configurações do sistema de ACL automático.
+
+| Opção | `true` | `false` |
+|---|---|---|
+| `systemAclActive` | Cria uma ACL automaticamente quando um grupo é criado | Desativa a criação automática de ACLs |
+
+**`receiveACLDefault`**
+
+Permite que um grupo específico receba automaticamente uma ACL específica quando um membro entra.
+
+```lua
+['receiveACLDefault'] = {
+    [1] = 'Policia', -- Grupo com ID 1 receberá a ACL 'Policia' ao entrar
+}
+```
+
+---
+
+### 6.3) `defaultConfigurations`
+
+> ⚠️ **ATENÇÃO — LEIA COM ATENÇÃO:**
+>
+> As configurações dentro de `defaultConfigurations` são aplicadas **somente na primeira inicialização do sistema** (quando a database ainda não existe ou foi apagada). Após a criação da database, estas opções **não têm mais efeito** — as configurações passam a ser gerenciadas diretamente pelo **painel admin (tecla F6)**.
+>
+> Se você quiser alterar qualquer uma dessas opções depois que o sistema já foi iniciado, faça isso pelo painel staff, não por aqui.
+
+| Opção | Tipo | Descrição |
+|---|---|---|
+| `createGroupsMembers` | `boolean` | `true` permite que membros comuns criem grupos |
+| `createPublicGroups` | `boolean` | `true` permite a criação de grupos públicos |
+| `maxMembersLimit` | `number` | Limite máximo de membros que o líder pode definir no grupo |
+| `maxDefaultMembers` | `number` | Quantidade padrão de membros ao criar um grupo |
+| `maxValueSalary` | `number` | Maior salário possível para um cargo |
+| `taxPercentage` | `number` | Porcentagem de imposto cobrado sobre a folha salarial |
+| `limitGroupsCreate` | `number` | Quantidade máxima de grupos que uma pessoa pode criar |
+| `maxGroupsJoin` | `number` | Quantidade máxima de grupos que uma pessoa pode participar |
+
+---
+
+### 6.4) `memberPermissionToCreateGroup`
+
+Define como verificar se um membro tem permissão para criar grupos (utilizado somente quando `createGroupsMembers = false`).
+
+| Opção | Descrição |
+|---|---|
+| `typeVerification` | Método de verificação: `'elementData'`, `'ACL'` ou `'Function'` |
+| `typeValue` | Chave da ElementData (usado somente com `typeVerification = 'elementData'`) |
+| `DataValue` | Valor a comparar / grupo ACL a verificar |
+| `typeFunction` | Função customizada de verificação (usado somente com `typeVerification = 'Function'`) |
+
+**Exemplo com Function:**
+```lua
+['memberPermissionToCreateGroup'] = {
+    ['typeVerification'] = 'Function',
+    ['typeFunction'] = function(playerElement)
+        local hasPermission = exports['sqh_permissions']:hasPermission(playerElement, 'createGroup')
+        return hasPermission
+    end,
+},
+```
+
+
+**`paymentToCreate`** — cobrança para criar o grupo
+
+Dentro de `memberPermissionToCreateGroup`, você pode configurar uma cobrança obrigatória para que o jogador pague um valor ao criar um grupo. Quando ativo, ao clicar em **"Criar grupo"**, um modal de confirmação é exibido com o custo. O grupo só é criado após o jogador confirmar e o valor ser descontado pelo servidor.
+
+| Opção | Tipo | Descrição |
+|---|---|---|
+| `payToCreate` | `boolean` | `true` ativa a cobrança ao criar um grupo |
+| `moneyName` | `string` | Nome da moeda/recurso exibido no modal de confirmação |
+| `paymentValue` | `number` | Valor cobrado para criar o grupo |
+| `verifyMoney` | `function(player)` | Função que retorna o saldo atual do jogador |
+| `takeMoney` | `function(player, value)` | Função que desconta o valor do jogador |
+
+```lua
+['memberPermissionToCreateGroup'] = {
+    ['typeVerification'] = 'elementData',
+    ['paymentToCreate'] = {
+        ['payToCreate'] = true,
+        ['moneyName'] = 'coins',
+        ['paymentValue'] = 4000,
+        ['verifyMoney'] = function(player)
+            return getPlayerMoney(player)
+        end,
+        ['takeMoney'] = function(player, value)
+            return takePlayerMoney(player, value)
+        end
+    }
+},
+```
+
+> Se `payToCreate = false`, nenhuma cobrança é feita e o modal não aparece.
+
+---
+
+### 6.5) `defaultRoles`
+
+Define os cargos que serão criados automaticamente em cada novo grupo.
+
+Cada cargo aceita:
+
+| Campo | Descrição |
+|---|---|
+| `roleName` | Nome do cargo |
+| `hierarchy` | Hierarquia: `1` = mais alto (líder), números maiores = cargos inferiores |
+| `defaultPermissionsValues` | Tabela de permissões padrão do cargo ao ser criado |
+
+```lua
+['defaultRoles'] = {
+    {roleName = 'Líder', hierarchy = 1, defaultPermissionsValues = {
+        administrator = true, -- Com administrator = true, o cargo tem acesso total
+        -- Todas as outras permissões podem ser false pois administrator sobrescreve
+    }},
+    {roleName = 'Membro', hierarchy = 2, defaultPermissionsValues = {
+        accessChat = true,
+        punchCard = true,
+        administrator = false,
+    }},
+},
+```
+
+> A lista completa de permissões disponíveis está na seção [Permissões disponíveis](/pt/resources/groups-exports#changegrouppermissionrole) do guia de exports.
+
+---
+
+### 6.6) `defaultPermissionsValues`
+
+Permissões padrão que um **novo cargo criado dentro do painel** receberá no momento da criação.
+
+```lua
+['defaultPermissionsValues'] = {
+    accessCalendar = false, accessChat = false, administrator = false,
+    -- ... todas as permissões começam como false por padrão
+},
+```
+
+---
+
+### 6.7) Limites de caracteres e eventos
+
+| Opção | Descrição |
+|---|---|
+| `maxCharactersNameProfile` | Máximo de caracteres para o nome de perfil do jogador |
+| `maxCharactersGroupName` | Máximo de caracteres para o nome de um grupo |
+| `maxShowEvents` | Quantidade máxima de próximos eventos exibidos na dashboard |
+
+---
+
+### 6.8) `widthdrawConfigurations`
+
+Define para onde vai o valor quando um jogador retira seu salário ou deposita no cofre.
+
+| Opção | Descrição |
+|---|---|
+| `withdrawType` | `'Account'` (dinheiro MTA) ou `'ElementData'` (dado de elemento) |
+| `elementDataMoney` | Chave da ElementData onde será somado o valor (usado somente com `'ElementData'`) |
+
+```lua
+['widthdrawConfigurations'] = {
+    ['withdrawType'] = 'Account', -- Usa givePlayerMoney diretamente
+    ["elementDataMoney"] = '',
+},
+```
+
+---
+
+## 7) `config.accounts`
+
+Define como o sistema identifica e armazena a conta de cada jogador.
+
+### Como pegar o nome do membro
+
+| Opção | Valor | Descrição |
+|---|---|---|
+| `getNameMember` | `'Account'` | Usa o nome da conta MTA |
+| `getNameMember` | `'ElementData'` | Usa uma ElementData |
+| `getNameMember` | `'Function'` | Usa uma função customizada |
+| `getNameElementData` | `string` | Chave da ElementData do nome (usado com `'ElementData'`) |
+| `getNameFunction` | `function` | Função que retorna o nome (usado com `'Function'`) |
+
+### Como salvar a conta do jogador
+
+| Opção | Valor | Descrição |
+|---|---|---|
+| `accountype` | `'Account'` | Usa a conta padrão do MTA |
+| `accountype` | `'ElementData'` | Usa um ID por ElementData |
+| `accountype` | `'Function'` | Usa uma função customizada |
+| `idelementdata` | `string` | Chave da ElementData de ID (usado com `'ElementData'`) |
+| `externalfunction` | `function` | Função que retorna o identificador (usado com `'Function'`) |
+
+---
+
+## 8) `config.colors`
+
+Personalização completa das cores da interface.
+
+### `colors.default`
+
+Paleta de cores base da interface.
+
+| Opção | Descrição |
+|---|---|
+| `default` | Cor de destaque principal |
+| `background_1` | Camada de fundo 1 (mais escura) |
+| `background_2` | Camada de fundo 2 |
+| `background_3` | Camada de fundo 3 |
+| `background_create_subpanels` | Fundo dos subpainéis de criação |
+| `default_element_1/2/3` | Cor de elementos por camada |
+| `default_element_subpanels` | Cor de elementos nos subpainéis |
+| `alternative_element_2/3` | Cores alternativas de elementos |
+| `stroke_high` | Borda em destaque |
+| `stroke_alternative_element_3` | Borda do elemento alternativo camada 3 |
+| `stroke_default_element_3` | Borda do elemento padrão camada 3 |
+| `text_default_title` | Cor dos títulos |
+| `text_default_subtitle` | Cor dos subtítulos |
+| `text_default_description` | Cor das descrições |
+| `line_1/2/3` | Cor das linhas separadoras por camada |
+
+> Todos os valores são strings hexadecimais **sem o `#`** (ex: `"5865F2"`).
+
+### `colors.extra`
+
+Cores de status e elementos especiais.
+
+| Opção | Descrição |
+|---|---|
+| `status_green` | Cor de status positivo/online |
+| `status_yellow` | Cor de status de aviso |
+| `status_red` | Cor de status negativo |
+| `verified_blue` | Cor do ícone de grupo verificado |
+| `delete_button` | Cor do botão de deletar |
+| `light_button` | Cor de botão claro |
+| `event_off` | Cor de evento desativado |
+| `black_card_explore` | Cor do card preto na exploração |
+| `orange` | Cor laranja |
+| `rank_1/2/3` | Cores de ranking 1º/2º/3º |
+| `highlight` | Cor de destaque especial |
+
+### `colors.exploreCards`
+
+Array de cores usadas nos cards da aba "Explorar". Você pode adicionar ou remover cores conforme preferência.
+
+```lua
+exploreCards = {"05ADCA", "73B243", "000000", "EA3C3C", ...}
+```
+
+---
+
+## 9) `translate`
+
+Sistema de tradução do interface.
+
+| Opção | Descrição |
+|---|---|
+| `language` | Código do idioma ativo (ex: `"PT"`, `"EN"`) |
+| `currency` | Símbolo da moeda exibida (ex: `"R$"`, `"$"`) |
+
+### Como adicionar um novo idioma
+
+1. Crie uma nova chave dentro de `translate.texts` com o código do seu idioma.
+2. Altere `translate.language` para o código do novo idioma.
+
+```lua
+translate = {
+    ["language"] = "EN",
+    ["texts"] = {
+        ["EN"] = {
+            ["global"] = {
+                ["close"] = "Close",
+                ["back"] = "Back",
+                -- ...
+            },
+            -- ...
+        }
+    }
+}
+```
+
+> O sistema já vem com `"PT"` (Português) e `"EN"` (English) disponíveis.
+
+---
+
+## Boas Práticas
+
+- Altere uma seção por vez e teste no jogo.
+- Em opções booleanas, lembre:
+  - `true` ativa
+  - `false` desativa
+- Depois de salvar: `restart sqh_groups`
+- **`defaultConfigurations` só tem efeito na primeira inicialização** (ou quando a database é apagada). Após isso, use o painel admin (F6) para alterar as configurações do sistema.

@@ -1,0 +1,484 @@
+---
+title: Configurações Whitelist System
+description: "Guia completo do config/settings.lua do Whitelist System."
+---
+
+<img
+  src="/images/whitelist-system.png"
+  alt="Hero Dark"
+/>
+
+## Resolva problemas comuns
+
+<CardGroup cols={2}>
+  <Card
+    title="Resource não inicia"
+    icon="gear"
+    href="/pt/start"
+  >
+   Está com problemas para iniciar o seu produto? Clique aqui
+  </Card>
+    <Card
+    title="Funções exportáveis"
+    icon="gear"
+    href="/pt/resources/whitelist/exports"
+  >
+   Precisa integrar o Whitelist System com outro script? Clique aqui
+  </Card>
+</CardGroup>
+
+<img
+  src="/images/ashy-help.png"
+  alt="Hero Dark"
+/>
+
+## Sobre o sistema
+O Whitelist System é um sistema completo de controle de acesso para servidores MTA. Ele bloqueia jogadores que não passaram pelo processo de whitelist, com suporte a aplicação pelo jogo, pelo Discord ou pelos dois combinados.
+
+## Visão Geral
+
+Este guia cobre **todo o arquivo** `config/settings.lua`.
+
+Objetivo:
+- Você entender exatamente o que cada opção muda.
+- Você saber quando usar `true` ou `false`.
+- Você configurar a whitelist sem precisar entrar em detalhes técnicos.
+
+## Antes de Começar
+
+- Arquivo de configuração: `config/settings.lua`
+- Depois de alterar a config: reinicie o resource (`restart sqh_whitelist`)
+- Regra geral:
+  - `true` = ativa a função
+  - `false` = desativa a função
+
+---
+
+## 1) `license`
+
+Configuração da licença de ativação do sistema.
+
+| Opção | Descrição |
+|---|---|
+| `license.Email` | E-mail da conta na Squash Company utilizado na compra do produto |
+| `license.Key` | Chave de licença do produto |
+
+```lua
+license = {
+    ["Email"] = "seu@email.com",
+    ["Key"] = "SQUASH-xxxx-xxxx",
+}
+```
+
+---
+
+## 2) `config.infobox`
+
+Funções de notificação do servidor. Configure aqui o sistema de alert/toast do seu servidor.
+
+| Callback | Quando é chamado |
+|---|---|
+| `server` | Notificações enviadas pelo lado server (recebe `source`, `message`, `type`) |
+| `client` | Notificações enviadas pelo lado client (recebe `source`, `message`, `type`) |
+
+`type` pode ser: `'success'`, `'error'`, `'info'`, `'warning'`
+
+```lua
+config.infobox = {
+    ['server'] = function(source, message, type)
+        exports["s_infobox"]:addInsInfobox(source, message, type)
+    end,
+    ['client'] = function(source, message, type)
+        exports["s_infobox"]:addIncInfobox(message, type)
+    end,
+}
+```
+
+---
+
+## 3) `config.events`
+
+### `onJoinCity`
+
+Callbacks executados quando o player é **liberado** na whitelist (na entrada ou após aprovação).
+
+```lua
+config.events.onJoinCity = {
+    ['server'] = function(player)
+        -- ex.: liberar acesso ao servidor, remover freeze, abrir seletor de personagem
+        triggerClientEvent(player, 'abrirPersonagens', player)
+    end,
+    ['client'] = function(player)
+        -- ex.: esconder HUD de whitelist, mostrar tela de boas-vindas
+    end
+}
+```
+
+### Verificação automática
+
+| Opção | `true` | `false` |
+|---|---|---|
+| `verifyOnJoin` | Verificar whitelist quando o player **entra no servidor** (`onPlayerJoin`) | Não verificar na entrada |
+| `verifyOnLogin` | Verificar whitelist quando o player **faz login na conta** (`onPlayerLogin`) | Não verificar no login |
+
+> **Recomendação**: Use `verifyOnLogin = true` e `verifyOnJoin = false` em servidores com sistema de login/conta próprio.
+
+---
+
+## 4) `config.social`
+
+Links das redes sociais exibidos na tela de whitelist.
+
+| Opção | Descrição |
+|---|---|
+| `discord` | Link de convite do Discord do servidor |
+| `youtube` | Link do canal do YouTube do servidor |
+
+```lua
+config.social = {
+    discord = "https://discord.gg/seuservidor",
+    youtube = "https://youtube.com/seucanal",
+}
+```
+
+---
+
+## 5) `config.rules`
+
+Link para o documento de regras do servidor, exibido na tela de whitelist.
+
+```lua
+config.rules = "https://docs.google.com/document/d/..."
+```
+
+---
+
+## 6) `config.getPlayerID`
+
+Função que retorna o ID do jogador no seu sistema. Usada para registrar o `playerID` na tabela de whitelist.
+
+```lua
+config.getPlayerID = function(player)
+    return getElementData(player, "ID") or math.random(1, 100000)
+end
+```
+
+> Personalize para retornar o ID correto do seu sistema de contas/personagens.
+
+---
+
+## 7) `config.whitelistInfos`
+
+### 7.1 Modo de aplicação
+
+| Opção | Valor | Comportamento |
+|---|---|---|
+| `whitelistOption` | `1` | O jogador faz a whitelist **somente pelo jogo** |
+| `whitelistOption` | `2` | O jogador faz a whitelist pelo **Discord + jogo** (ambos obrigatórios) |
+| `whitelistOption` | `3` | O jogador faz a whitelist **somente pelo Discord** |
+
+---
+
+### 7.2 `discordInfos` — Configurações do Bot Discord
+
+Configurações usadas quando `whitelistOption` é `2` ou `3`.
+
+| Opção | Descrição |
+|---|---|
+| `timeStartDiscord` | Tempo em minutos que o usuário tem para **começar** a responder a whitelist após o canal ser criado |
+| `categoryWhitelists` | ID da categoria no Discord onde os canais de whitelist serão criados |
+| `mentionInFormsView` | Lista de IDs de cargos que serão **marcados** na criação de um novo formulário |
+| `discordChannelID` | ID do canal onde o bot envia a mensagem de início da whitelist |
+| `discordChannelResponses` | ID do canal fórum onde os formulários respondidos são postados |
+| `setRolesApproved` | Lista de IDs de cargos **dados** ao jogador quando **aprovado** |
+| `setRolesReproved` | Lista de IDs de cargos **dados** ao jogador quando **reprovado** |
+| `removeRolesApproved` | Lista de IDs de cargos **removidos** do jogador quando **aprovado** |
+| `removeRolesReproved` | Lista de IDs de cargos **removidos** do jogador quando **reprovado** |
+
+```lua
+discordInfos = {
+    timeStartDiscord = 5,
+    categoryWhitelists = '000000000000000000',
+    mentionInFormsView = {'000000000000000000'},
+    discordChannelID = '000000000000000000',
+    discordChannelResponses = '000000000000000000',
+    setRolesApproved = {'000000000000000000'},
+    setRolesReproved = {'000000000000000000'},
+    removeRolesApproved = {'000000000000000000'},
+    removeRolesReproved = {'000000000000000000'},
+}
+```
+
+---
+
+### 7.3 Comportamento das perguntas
+
+| Opção | `true` | `false` |
+|---|---|---|
+| `shuffleQuestions` | As perguntas aparecem em **ordem aleatória** | As perguntas aparecem na ordem definida |
+| `backQuestion` | O jogador pode **voltar** à pergunta anterior | O jogador não pode voltar (no Discord nunca é permitido) |
+| `timeToAnswerQuestion` | Cada pergunta tem um **tempo limite** para resposta | Sem limite de tempo por pergunta |
+| `shuffleOptions` | As alternativas das perguntas `options` são **embaralhadas** | As alternativas aparecem na ordem definida |
+| `automaticCorrection` | O sistema **corrige automaticamente** as respostas (questões `options` apenas) | A correção é feita **manualmente pelo staff** via Discord |
+
+---
+
+### 7.4 Chances e cooldown
+
+| Opção | Tipo | Descrição |
+|---|---|---|
+| `chancesToAnswer` | `number` | Quantidade de chances que o jogador tem para responder antes de entrar em cooldown |
+| `cooldownTime` | `number` | Tempo de cooldown em **horas** após acabar as chances |
+| `maximumWrongAnswers` | `number` | Quantidade máxima de respostas erradas permitidas (somente com `automaticCorrection = true`) |
+
+> **Exemplo**: `chancesToAnswer = 3`, `cooldownTime = 24` — o jogador tem 3 tentativas e, ao esgotar, aguarda 24 horas para tentar novamente.
+
+---
+
+### 7.5 `translates` — Textos e mensagens do bot Discord
+
+Textos exibidos pelo bot do Discord durante o processo de whitelist.
+
+| Opção | Descrição |
+|---|---|
+| `descriptionMainMessage` | Mensagem principal enviada no canal de início da whitelist (suporta Markdown do Discord) |
+| `textButton` | Texto do botão de início |
+| `emojiButton` | Emoji exibido no botão |
+| `imageMain` | URL da imagem exibida na mensagem principal |
+| `imageFooter` | URL da imagem do rodapé |
+| `textFooter` | Texto do rodapé da mensagem |
+| `startTitle` | Título da tela de início no canal do jogador |
+| `startDescription` | Descrição da tela de início |
+| `startButton` | Texto do botão para iniciar |
+| `buttonApprove` | Texto do botão de aprovar (visível para o staff) |
+| `buttonReprove` | Texto do botão de reprovar (visível para o staff) |
+| `question_option_message` | Formato da mensagem de perguntas do tipo `options`. Use `$title`, `$endTime`, `$options` |
+| `question_text_message` | Formato da mensagem de perguntas do tipo `text`. Use `$title`, `$endTime` |
+
+---
+
+### 7.6 `messages` — Mensagens operacionais
+
+Mensagens enviadas em situações específicas do fluxo de whitelist.
+
+| Chave | Quando é exibida |
+|---|---|
+| `confirmInfos` | Ao solicitar confirmação de dados |
+| `digitCode` | Ao pedir o código do jogo |
+| `digitNameSurname` | Ao pedir nome e sobrenome |
+| `max6Digits` | Quando o código digitado tem mais ou menos de 6 dígitos |
+| `sended_solicitation` | Ao enviar a solicitação com sucesso |
+| `code_incorrect` | Quando o código está errado |
+| `register_success` | Após cadastrar a conta com sucesso |
+| `name_unavailable` | Quando o nome escolhido já está em uso |
+| `code_failed` | Quando ocorre falha na confirmação do código |
+| `continue_in_game` | Quando o jogador deve continuar a whitelist no jogo |
+| `continue_in_discord` | Quando o canal do Discord foi criado. Use `$channel` e `$time` |
+| `start_minutes` | Contagem regressiva antes de iniciar as perguntas |
+| `close_time_message` | Quando o tempo para iniciar a whitelist expirou. Use `$user` |
+| `form_sended` | Quando o formulário foi enviado para avaliação. Use `$user` |
+| `time_finish_answer` | Quando o tempo de resposta de uma pergunta esgota |
+| `whitelist_exists` | Quando o jogador já tem uma whitelist em andamento. Use `$channel` |
+| `whitelist_approved_dm` | Mensagem enviada por DM quando o jogador é **aprovado** |
+| `whitelist_reproved_dm` | Mensagem enviada por DM quando o jogador é **reprovado** |
+
+---
+
+### 7.7 `questions` — Perguntas da whitelist
+
+Lista de perguntas exibidas durante o processo. Cada pergunta é uma tabela com os seguintes campos:
+
+| Campo | Tipo | Descrição |
+|---|---|---|
+| `title` | `string` | Texto da pergunta |
+| `type` | `string` | `'text'` (resposta livre) ou `'options'` (múltipla escolha) |
+| `timeResponse` | `number` | Tempo em segundos para responder |
+| `options` | `table` | Lista de alternativas (somente para `type = 'options'`) |
+
+Cada alternativa em `options`:
+
+| Campo | Tipo | Descrição |
+|---|---|---|
+| `nameOption` | `string` | Texto da alternativa |
+| `isCorrect` | `boolean` | `true` para a resposta correta, `false` para incorreta |
+
+> **Atenção**: Questões do tipo `'text'` **não** são corrigidas automaticamente, mesmo com `automaticCorrection = true`. Elas são sempre avaliadas pelo staff.
+
+**Exemplo de pergunta `options`:**
+```lua
+{
+    title = 'O que é PowerGaming?',
+    type = 'options',
+    timeResponse = 180,
+    options = {
+        {nameOption = 'Jogar com muito poder.', isCorrect = false},
+        {nameOption = 'Forçar ações irreais em outros jogadores.', isCorrect = true},
+        {nameOption = 'Usar cheats no servidor.', isCorrect = false},
+    }
+}
+```
+
+**Exemplo de pergunta `text`:**
+```lua
+{
+    title = 'Descreva brevemente a história do seu personagem.',
+    type = 'text',
+    timeResponse = 120,
+}
+```
+
+---
+
+## 8) `config.musicPlayer`
+
+Lista de músicas tocadas na tela de whitelist. Cada item é uma tabela com os campos:
+
+| Campo | Descrição |
+|---|---|
+| `name` | Nome da música |
+| `author` | Nome do artista |
+| `url` | URL de stream da música |
+
+```lua
+config.musicPlayer = {
+    {name = "Mistérios", author = "Kayblack", url = "https://server1.mtabrasil.com.br/play?id=..."},
+}
+```
+
+---
+
+## 9) `config.faq`
+
+Lista de perguntas frequentes exibidas na tela de whitelist antes de o jogador iniciar.
+
+Cada item é uma tabela com:
+
+| Campo | Descrição |
+|---|---|
+| `topic` | Título/pergunta do FAQ |
+| `answer` | Resposta exibida ao clicar |
+
+```lua
+config.faq = {
+    {
+        topic = 'O que é Roleplay (RP)?',
+        answer = 'Roleplay é...'
+    },
+}
+```
+
+---
+
+## 10) `config.nameMainConfigs`
+
+Configuração auxiliar para obter o nome da conta interna do sistema (usado para configuração técnica de HTTP com serial).
+
+| Opção | Tipo | Descrição |
+|---|---|---|
+| `commandActive` | `boolean` | Ativa o comando `/vernomedaconta` no jogo. Deixe `true` apenas durante a configuração inicial do serial |
+| `havePermission` | `function(player)` | Retorna `true` se o player tem permissão para usar o comando |
+
+> **Importante**: Após usar o comando para configurar o serial, desative esta opção com `commandActive = false`.
+
+```lua
+config.nameMainConfigs = {
+    commandActive = false,
+    havePermission = function(player)
+        return isObjectInACLGroup('user.'..getAccountName(getPlayerAccount(player)), aclGetGroup('Admin'))
+    end
+}
+```
+
+---
+
+## 11) `interface`
+
+Configurações visuais da interface de whitelist.
+
+### 11.1 Cores
+
+| Opção | Descrição |
+|---|---|
+| `white` | Cor branca base |
+| `black` | Cor preta base |
+| `primary` | Cor principal do servidor (botões, destaques, etc.) |
+| `primary_contrast` | Cor de texto sobre a cor primária |
+| `primary_2` | Variação mais clara da cor primária |
+| `primary_element` | Cor de fundo de elementos com baixa opacidade |
+| `primary_element_border` | Cor de borda de elementos com opacidade média |
+| `hover_element_border` | Cor de borda ao passar o mouse |
+| `primary_text` | Cor principal de texto |
+| `secondary_text` | Cor de texto secundário (40% de opacidade) |
+| `tertiary_text` | Cor de texto terciário (30% de opacidade) |
+| `question_title` | Cor do título das perguntas (60% de opacidade) |
+| `inactive_text` | Cor de texto inativo (10% de opacidade) |
+| `red_wrong` | Cor vermelha para respostas erradas |
+| `red_wrong_contrast` | Cor do texto sobre o fundo vermelho |
+| `warning` | Cor amarela para avisos |
+| `warning_contrast` | Cor do texto sobre o fundo amarelo |
+| `modal_bg` | Cor de fundo do modal/painel |
+
+Formato das cores: `'#RRGGBB XX%'` onde `XX%` é a opacidade.
+
+```lua
+interface.colors = {
+    primary = '#198028 100%',        -- cor principal do servidor
+    primary_contrast = '#FFFFFF 100%',
+    modal_bg = '#0E0E0E 98%',
+}
+```
+
+### 11.2 Border Radius
+
+| Opção | Tipo | Descrição |
+|---|---|---|
+| `border-radius` | `number` (px) | Arredondamento dos botões, caixas de texto e elementos da interface |
+
+```lua
+interface['border-radius'] = 30
+```
+
+---
+
+## 12) `translate`
+
+Define o idioma padrão e os textos da interface.
+
+### 12.1 Idioma padrão
+
+| Opção | Valor | Descrição |
+|---|---|---|
+| `translate.language` | `'PT-BR'` | Português do Brasil |
+| `translate.language` | `'EN'` | Inglês |
+| `translate.language` | `'PT-PT'` | Português de Portugal |
+| `translate.language` | `'ES'` | Espanhol |
+| `translate.language` | `'TR'` | Turco |
+| `translate.language` | `'RU'` | Russo |
+| `translate.language` | `'HU'` | Húngaro |
+
+```lua
+translate = {
+    language = 'PT-BR',
+}
+```
+
+### 12.2 Campos por idioma
+
+Cada bloco de idioma contém:
+
+| Campo | Descrição |
+|---|---|
+| `months` | Nomes dos meses por extenso |
+| `date_format` | Formato de data completo (usa `string.format` do Lua) |
+| `hours_format` | Formato de horas e minutos (usado no cooldown) |
+| `date_format_short` | Formato curto de data |
+| `question_definitions` | Letras usadas para identificar alternativas (`{"A", "B", "C", "D", "E", "F"}`) |
+
+---
+
+## Dicas Finais
+
+- Após qualquer alteração no `config/settings.lua`, reinicie o resource com `restart sqh_whitelist`.
+- Ao configurar pela primeira vez, ative `nameMainConfigs.commandActive = true`, use o comando `/vernomedaconta` para obter o nome da conta, configure o serial no painel da Squash e depois volte `commandActive = false`.
+- Para servidores com login próprio, use `verifyOnLogin = true` e `verifyOnJoin = false` para evitar verificação prematura antes do login.
+- Configure o `config.events.onJoinCity.server` para liberar o acesso do player ao servidor após a whitelist ser aprovada — sem isso o jogador será aprovado mas não terá o acesso liberado pelo seu sistema.

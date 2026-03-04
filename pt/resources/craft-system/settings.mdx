@@ -1,0 +1,535 @@
+---
+title: Configurações Craft System
+description: "Guia completo do config/settings.lua do Craft System."
+---
+
+## Resolva problemas comuns
+
+<CardGroup cols={2}>
+  <Card
+    title="Resource não inicia"
+    icon="gear"
+    href="/pt/start"
+  >
+   Está com problemas para iniciar o seu produto? Clique aqui
+  </Card>
+    <Card
+    title="Configurar o resource"
+    icon="gear"
+    href="/pt/resources/craft-system#como-configurar-o-resource"
+  >
+   Está com dúvidas de como configurar algo no sistema? Clique aqui
+  </Card>
+</CardGroup>
+
+<img
+  src="/images/ashy-help.png"
+  alt="Hero Dark"
+/>
+
+## Sobre o sistema
+A proposta do Craft System é unir flexibilidade, persistência e controle total sobre as bancadas de crafting do seu servidor.
+O dono do servidor tem poder absoluto para definir quais itens existem, quanto tempo cada fabricação leva, quais upgrades estão disponíveis e como o sistema se integra com o inventário e a economia do servidor.
+
+Com a configuração, você pode:
+- Definir quais itens podem ser fabricados e seus ingredientes;
+- Controlar o desgaste das peças primárias e o consumo de combustível;
+- Personalizar o visual das abas, categorias e interface;
+- Integrar com qualquer sistema de inventário e economia via funções de callback;
+- E muito mais.
+
+## Visão Geral
+
+Este guia cobre **todo o arquivo** `config/settings.lua`.
+
+Objetivo:
+- Você entender exatamente o que cada opção muda.
+- Você saber como adicionar itens, ingredientes e upgrades.
+- Você configurar o sistema sem precisar entrar nos arquivos fonte.
+
+## Antes de Começar
+
+- Arquivo de configuração: `config/settings.lua`
+- Arquivo de banco/licença: `config/main.lua`
+- Depois de alterar a config: reinicie o resource (`restart sqh_craftsystem`)
+- Regra geral:
+  - `true` = ativa a função
+  - `false` = desativa a função
+
+---
+
+## 1) `Config.tabs`
+
+Define as abas exibidas no topo do painel de crafting.
+
+| Campo | Tipo | Descrição |
+|---|---|---|
+| `id` | `string` | Identificador interno da aba |
+| `label` | `string` | Texto exibido na aba |
+| `icon` | `string` | Caminho do ícone da aba |
+
+Abas disponíveis por padrão:
+- `craft` — Fabricar Itens
+- `maintenance` — Manutenção (upgrades e melhorias da bancada)
+
+**Exemplo:**
+```lua
+Config.tabs = {
+    { id = "craft", label = "FABRICAR ITENS", icon = "assets/icon_34.png" },
+    { id = "maintenance", label = "MANUTENÇÃO", icon = "assets/tabler_table_filled.png" },
+}
+```
+
+---
+
+## 2) `Config.categories`
+
+Define as categorias de filtro exibidas na aba de fabricação.
+
+| Campo | Tipo | Descrição |
+|---|---|---|
+| `id` | `string` | Identificador interno da categoria |
+| `label` | `string` | Texto exibido no filtro |
+
+A categoria `"all"` é obrigatória e exibe todos os itens.
+Os demais IDs devem corresponder ao campo `category` de cada item em `Config.craftItems`.
+
+**Exemplo:**
+```lua
+Config.categories = {
+    { id = "all",       label = "Todos" },
+    { id = "weapons",   label = "Armamento" },
+    { id = "items",     label = "Itens" },
+    { id = "ammo",      label = "Munições" },
+    { id = "tools",     label = "Ferramentas" },
+    { id = "medical",   label = "Medicina" },
+    { id = "electronics", label = "Eletrônicos" },
+}
+```
+
+---
+
+## 3) `Config.hotbar`
+
+Configura o hotbar visual de slots de fabricação exibido na tela.
+
+| Opção | O que muda |
+|---|---|
+| `slots` | Número total de slots exibidos no hotbar |
+| `slotSize` | Tamanho em pixels de cada slot |
+| `slotSpacing` | Espaçamento entre os slots |
+| `startX` | Posição X inicial do hotbar na tela |
+| `startY` | Posição Y inicial do hotbar na tela |
+
+---
+
+## 4) `Config.toolModal`
+
+Configura o modal de peças primárias (ferramentas da bancada).
+
+| Opção | O que muda |
+|---|---|
+| `w` | Largura do modal em pixels |
+| `h` | Altura do modal em pixels |
+| `slotSize` | Tamanho de cada slot de ferramenta |
+| `slotSpacing` | Espaçamento entre slots |
+| `maxSlots` | Número máximo de slots de ferramentas exibidos |
+
+---
+
+## 5) `Config.refuelModal`
+
+Configura o modal de abastecimento de combustível da bancada.
+
+| Opção | O que muda |
+|---|---|
+| `w` | Largura do modal |
+| `h` | Altura do modal |
+| `pricePerUnit` | Preço cobrado por unidade de combustível |
+| `maxTank` | Capacidade máxima do tanque |
+| `getMoney` | Função chamada para verificar o saldo do player |
+| `takeMoney` | Função chamada para descontar dinheiro do player |
+
+**Exemplo de integração com economia customizada:**
+```lua
+Config.refuelModal = {
+    pricePerUnit = 500,
+    maxTank = 100,
+    getMoney = function(player)
+        return exports.sqh_economy:getMoney(player)
+    end,
+    takeMoney = function(player, amount)
+        return exports.sqh_economy:takeMoney(player, amount)
+    end,
+}
+```
+
+---
+
+## 6) `Config.primaryTools`
+
+Lista as peças primárias exibidas no tooltip de ferramentas (somente visual, para referência ao jogador).
+
+| Campo | Tipo | Descrição |
+|---|---|---|
+| `id` | `string` ou `number` | Identificador da peça |
+| `name` | `string` | Nome exibido |
+| `description` | `string` | Descrição exibida no tooltip |
+| `icon` | `string` | Caminho do ícone |
+| `itemID` | `number` | ID do item no inventário (usado para verificar posse) |
+
+**Observação:** Para o comportamento real das peças (desgaste, nível, tipo de cobrança), use `Config.primaryParts`.
+
+---
+
+## 7) `Config.craftItems`
+
+**Esta é a seção mais importante.** Define todos os itens que podem ser fabricados.
+
+Cada item aceita:
+
+| Campo | Tipo | Descrição |
+|---|---|---|
+| `id` | `number` | ID único do item (não repita IDs) |
+| `name` | `string` | Nome exibido no painel |
+| `description` | `string` | Descrição exibida ao selecionar o item |
+| `category` | `string` | Categoria (deve existir em `Config.categories`) |
+| `levelRequired` | `number` | Nível mínimo exigido do player para fabricar |
+| `price` | `number` | Valor exibido (referência visual, cobrança real é pelos ingredientes) |
+| `craftTime` | `number` | Tempo de fabricação em segundos |
+| `icon` | `string` | Caminho do ícone do item |
+| `preview` | `string` | Caminho da imagem de preview |
+| `ingredients` | `table` | Lista de ingredientes necessários |
+
+### Campos de cada ingrediente
+
+| Campo | Tipo | Descrição |
+|---|---|---|
+| `id` | `number` ou `string` | ID do item no inventário (aceita nome também) |
+| `name` | `string` | Nome exibido |
+| `icon` | `string` | Caminho do ícone |
+| `required` | `number` | Quantidade necessária |
+
+**Exemplo de item:**
+```lua
+{
+    id = 1,
+    name = "Carabina",
+    description = "Uma carabina compacta e precisa.",
+    category = "weapons",
+    levelRequired = 12,
+    price = 15000,
+    craftTime = 90,
+    icon = "assets/items/special-carbine.png",
+    preview = "assets/items/special-carbine_preview.png",
+    ingredients = {
+        { id = 201, name = "Ferro fundido",     icon = "assets/icon_5.png", required = 20 },
+        { id = 202, name = "Aço reforçado",     icon = "assets/icon_6.png", required = 10 },
+        { id = 203, name = "Pólvora",           icon = "assets/icon_7.png", required = 5  },
+    },
+},
+```
+
+---
+
+## 8) `Config.maintenanceItems`
+
+Define os itens de manutenção disponíveis na aba de manutenção. Existem dois tipos:
+
+### `type = "consumable"` — Item consumível (ex: Ácido Clorídrico)
+
+| Campo | Tipo | Descrição |
+|---|---|---|
+| `id` | `string` | ID interno do item (ex: `"item_15"`) |
+| `name` | `string` | Nome exibido |
+| `description` | `string` | Descrição |
+| `icon` | `string` | Caminho do ícone |
+| `levelRequired` | `number` | Nível mínimo para comprar |
+| `uses` | `number` | Quantidade de usos fornecidos |
+| `price` | `number` | Preço de compra |
+| `badge` | `string` | Texto do badge exibido no card (ex: `"20 usos"`) |
+| `accelerate.percentage` | `number` | Chance (%) de ativar o efeito a cada craft |
+| `accelerate.craftTimePercent` | `number` | Percentual de redução no tempo de craft quando ativado |
+| `effects` | `table` | Efeitos visuais exibidos no card |
+| `getMoney` | `function` | Função para verificar saldo do player |
+| `takeMoney` | `function` | Função para descontar dinheiro do player |
+
+### `type = "upgrade"` — Melhoria permanente (ex: Núcleo de Processamento, Motor Extra)
+
+| Campo | Tipo | Descrição |
+|---|---|---|
+| `id` | `string` | ID interno |
+| `name` | `string` | Nome exibido |
+| `description` | `string` | Descrição |
+| `icon` | `string` | Caminho do ícone |
+| `levelRequired` | `number` | Nível mínimo para comprar |
+| `price` | `number` | Preço de compra |
+| `badge` | `string` | Texto do badge (ex: `"Melhoria"`) |
+| `effects` | `table` | Efeitos visuais exibidos no card |
+| `getMoney` | `function` | Função para verificar saldo |
+| `takeMoney` | `function` | Função para descontar dinheiro |
+
+### Campos de `effects` (visual)
+
+| Campo | Tipo | Descrição |
+|---|---|---|
+| `label` | `string` | Nome do efeito |
+| `valueText` | `string` | Texto do valor (ex: `"+20%"`, `"+01"`) |
+| `isProgress` | `boolean` | Se `true`, exibe barra de progresso |
+| `current` | `number` | Valor atual da barra (quando `isProgress = true`) |
+| `maxValue` | `number` | Valor máximo da barra |
+| `color` | `string` | Cor da barra: `'success'`, `'danger'`, `'info'` |
+
+**Itens padrão e seus efeitos:**
+
+| Item | Efeito |
+|---|---|
+| `item_15` Ácido Clorídrico | Consumível — chance de reduzir o tempo de craft. Cada compra adiciona `uses` ao `consumable_boost` da bancada. |
+| `item_14` Núcleo de Processamento | Upgrade — adiciona +1 slot de fabricação (`slot_upgrade`) à bancada permanentemente. |
+| `item_16` Motor Extra | Upgrade — adiciona +1 fabricação simultânea (`parallel_upgrade`) à bancada permanentemente. |
+
+---
+
+## 9) `Config.settings`
+
+Configurações gerais de texto e posicionamento da interface.
+
+| Opção | O que muda |
+|---|---|
+| `tableName` | Nome exibido como dono/grupo da bancada |
+| `tableTitle` | Título principal exibido no painel |
+| `tableDescription` | Descrição exibida abaixo do título |
+| `searchPlaceholder` | Texto de placeholder da barra de busca |
+| `prefixValue` | Prefixo exibido antes dos valores monetários (ex: `"PV"` → `PV 50.000`) |
+| `craftsPerPartWear` | A cada quantos crafts uma peça primária perde 1 nível |
+| `renderTarget` | Posição e tamanho do render target 3D (preview do item) |
+
+### `renderTarget`
+
+| Campo | Descrição |
+|---|---|
+| `x` | Posição X do render target na tela |
+| `y` | Posição Y do render target na tela |
+| `w` | Largura do render target |
+| `h` | Altura do render target |
+
+---
+
+## 10) `Config.purchaseModal`
+
+Configura o modal de confirmação de compra exibido na aba de manutenção.
+
+| Opção | O que muda |
+|---|---|
+| `w` | Largura do modal |
+| `h` | Altura do modal |
+| `title` | Título do modal |
+| `description` | Texto de confirmação |
+| `confirmText` | Texto do botão de confirmar |
+| `cancelText` | Texto do botão de cancelar |
+
+---
+
+## 11) `Config.craftTableSettings`
+
+Configura o comportamento físico das bancadas no mundo do jogo.
+
+| Opção | O que muda |
+|---|---|
+| `model` | ID do modelo 3D usado para a bancada |
+| `interactionKey` | Tecla para interagir com a bancada / recolher |
+| `closeKey` | Tecla para fechar o painel de crafting |
+| `markerSize` | Tamanho do marker invisível de colisão ao redor da bancada |
+| `previewColor` | Cor do preview quando a posição é válida `{ r, g, b, a }` |
+| `previewInvalidColor` | Cor do preview quando a posição é inválida `{ r, g, b, a }` |
+| `mapMarkDuration` | Segundos que o marcador da bancada fica no mapa quando ela já está spawnada |
+
+**Exemplo:**
+```lua
+Config.craftTableSettings = {
+    model = 2116,
+    interactionKey = "e",
+    closeKey = "backspace",
+    markerSize = 1.5,
+    previewColor = { r = 100, g = 255, b = 100, a = 150 },
+    previewInvalidColor = { r = 255, g = 100, b = 100, a = 150 },
+    mapMarkDuration = 10,
+}
+```
+
+---
+
+## 12) `Config.primaryParts`
+
+Define as peças primárias que a bancada precisa para funcionar. São 4 peças (slots fixos). Cada peça possui um campo `dbField` que define onde o nível é salvo no banco.
+
+| Campo | Tipo | Descrição |
+|---|---|---|
+| `dbField` | `string` | Campo no banco: `primary_part_1` a `primary_part_4` |
+| `id` | `string` ou `number` | Identificador da peça |
+| `name` | `string` | Nome exibido |
+| `description` | `string` | Descrição |
+| `icon` | `string` | Caminho do ícone |
+| `takeType` | `string` | `'item'` ou `'money'` — como o player paga ao inserir a peça |
+| `moneyPrice` | `number` | Preço em dinheiro (somente se `takeType = 'money'`) |
+| `moneyFunctions.getMoney` | `function` | Função para obter o saldo do player |
+| `moneyFunctions.takeMoney` | `function` | Função para descontar do player |
+| `itemID` | `number` | ID do item no inventário (somente se `takeType = 'item'`) |
+| `minLevel` | `number` | Nível mínimo da peça (normalmente `1`) |
+| `maxLevel` | `number` | Nível máximo que a peça pode atingir |
+
+**Como funciona o desgaste:**
+A cada `Config.settings.craftsPerPartWear` fabricações, o sistema reduz o nível de uma peça primária em 1. Se qualquer peça chegar ao nível 0, a bancada para de funcionar até que o player insira novamente a peça.
+
+**Exemplo de peça cobrada por item:**
+```lua
+{
+    dbField = "primary_part_1",
+    id = "Broca",
+    name = "Broca",
+    takeType = 'item',
+    itemID = 10,
+    minLevel = 1,
+    maxLevel = 6,
+}
+```
+
+**Exemplo de peça cobrada por dinheiro:**
+```lua
+{
+    dbField = "primary_part_2",
+    id = 102,
+    name = "Esquemas",
+    takeType = 'money',
+    moneyPrice = 1000,
+    moneyFunctions = {
+        getMoney = function(player) return getPlayerMoney(player) end,
+        takeMoney = function(player, amount) return takePlayerMoney(player, amount) end,
+    },
+    minLevel = 1,
+    maxLevel = 6,
+}
+```
+
+---
+
+## 13) `Config.upgradeSettings`
+
+Define os limites mínimo, máximo e valor padrão de cada upgrade da bancada.
+
+| Upgrade | Min | Max | Default | Descrição |
+|---|---|---|---|---|
+| `fuel` | `0` | `100` | `0` | Combustível da bancada |
+| `consumable_boost` | `0` | `20` | `0` | Ácido clorídrico acumulado |
+| `slot_upgrade` | `1` | `14` | `1` | Slots de fabricação simultâneos |
+| `parallel_upgrade` | `1` | `14` | `1` | Fabricações paralelas permitidas |
+
+Valores fora do intervalo são automaticamente ajustados pelo sistema.
+
+---
+
+## 14) `Config.permissions`
+
+Controla quem pode criar e gerenciar bancadas no jogo.
+
+| Opção | O que controla |
+|---|---|
+| `create` | Lista de grupos ACL autorizados a usar `/createcrafttable` |
+| `management` | Lista de grupos ACL com acesso ao painel de gerenciamento (botão direito na bancada) |
+
+**Exemplo:**
+```lua
+Config.permissions = {
+    create = { 'Console', 'Admin' },
+    management = { 'Console', 'Admin', 'Moderador' },
+}
+```
+
+---
+
+## 15) `Config.events`
+
+**Esta seção conecta o Craft System ao inventário e economia do seu servidor.** Todas as funções devem ser substituídas pelas chamadas do seu sistema.
+
+| Função | Quando é chamada | O que deve retornar |
+|---|---|---|
+| `hasItemPlayer(player, itemID)` | Ao verificar se o player possui um item | `true` ou `false` |
+| `getHasQuantityItemPlayer(player, itemID, amount)` | Ao verificar a quantidade de um ingrediente | `number` (quantidade atual) |
+| `giveItemPlayer(player, itemID, amount)` | Ao entregar o item fabricado ao player | `true` ou `false` |
+| `takeItemPlayer(player, itemID, amount)` | Ao consumir ingredientes do inventário | `true` ou `false` |
+| `getPlayerIdentifier(player)` | Para identificar o player nas verificações de ACL | `string` (nome da conta MTA) |
+
+**Exemplo de integração com sqh_inventory:**
+```lua
+Config.events = {
+    hasItemPlayer = function(player, itemID)
+        return exports.sqh_inventory:hasItem(player, itemID)
+    end,
+    getHasQuantityItemPlayer = function(player, itemID, amount)
+        return exports.sqh_inventory:getHasQuantityItem(player, itemID, amount)
+    end,
+    giveItemPlayer = function(player, itemID, amount)
+        return exports.sqh_inventory:giveItem(player, itemID, amount)
+    end,
+    takeItemPlayer = function(player, itemID, amount)
+        return exports.sqh_inventory:takeItem(player, itemID, amount)
+    end,
+    getPlayerIdentifier = function(player)
+        return getAccountName(getPlayerAccount(player))
+    end,
+}
+```
+
+---
+
+## 16) `Config.colors`
+
+Personaliza todas as cores da interface. Cada cor usa a função `tocolor(r, g, b, a)`.
+
+| Chave | Uso |
+|---|---|
+| `primary` | Cor de destaque principal (roxo) |
+| `primaryDark` | Variante escura do destaque |
+| `primaryBorder` | Borda com cor de destaque |
+| `textWhite` / `textWhite80` / `textWhite60` / `textWhite50` | Textos com diferentes opacidades |
+| `textDark` | Texto sobre fundo claro |
+| `success` / `successBg` | Verde (progresso, sucesso) |
+| `danger` / `dangerAlt` / `dangerBg` | Vermelho (erro, item em falta) |
+| `info` / `infoBg` | Azul (informações neutras) |
+| `bgDark` / `bgLight` / `bgLighter` / `bgProgress` | Fundos do painel |
+| `borderLight` / `borderLighter` / `borderDivider` | Bordas e divisores |
+| `lineWhite` / `lineGray` | Linhas decorativas |
+| `locked` | Slots bloqueados |
+| `btnBuy` | Botão de compra |
+
+---
+
+## 17) `Config.fonts`
+
+Define as fontes usadas na interface. Os valores são os nomes internos das fontes carregadas via `meta.xml`.
+
+| Chave | Fonte carregada |
+|---|---|
+| `jetbrains_mono_medium` | JetBrainsMono-Medium |
+| `jetbrains_mono_bold` | JetBrainsMono-Bold |
+| `jetbrains_mono_extrabold` | JetBrainsMono-ExtraBold |
+| `jetbrains_mono_regular` | JetBrainsMono-Medium |
+| `roboto_condensed_regular` | RobotoCondensed-Regular |
+| `roboto_condensed_medium` | RobotoCondensed-Medium |
+| `roboto_condensed_bold` | RobotoCondensed-Medium |
+| `tt_lakes_neue_trl_cnd_xbd` | TTExtraBold |
+| `tt_lakes_neue_trl_cnd_db` | TTDemiBold |
+| `tt_lakes_neue_trl_cnd_md` | TTDemiBold |
+
+Não é necessário alterar esta seção a menos que você substitua os arquivos de fonte nas `assets/fonts/`.
+
+---
+
+## Boas Práticas
+
+- Altere uma seção por vez e teste no jogo.
+- IDs de `Config.craftItems` devem ser únicos — nunca repita o mesmo ID.
+- A categoria de cada item em `Config.craftItems` deve existir em `Config.categories`.
+- Em `Config.events`, nunca deixe as funções retornando valores fixos em produção — integre com seu inventário.
+- Para adicionar um novo item de manutenção, crie uma entrada em `Config.maintenanceItems` com um ID único e ajuste as funções `getMoney`/`takeMoney`.
+- Depois de salvar: `restart sqh_craftsystem`

@@ -1,0 +1,797 @@
+---
+title: Exports Groups System
+description: "Adquiriu o Groups System e está com dúvidas sobre as funções exportáveis? Você está no lugar certo!"
+---
+
+
+## Resolva problemas comuns
+
+<CardGroup cols={2}>
+  <Card
+    title="Resource não inicia"
+    icon="gear"
+    href="/pt/start"
+  >
+   Está com problemas para iniciar o seu produto? Clique aqui
+  </Card>
+    <Card
+    title="Configurar o resource"
+    icon="gear"
+    href="/pt/resources/groups#como-configurar-o-resource"
+  >
+   Está com dúvidas de como configurar algo no sistema? Clique aqui
+  </Card>
+</CardGroup>
+
+<img
+  src="/images/ashy-help.png"
+  alt="Hero Dark"
+/>
+
+## Sobre o sistema
+O Groups System é um sistema completo de gestão de grupos/organizações para servidores MTA:SA.
+Com ele, jogadores podem criar grupos, convidar membros, gerenciar cargos, finanças, calendário de eventos, chat interno, registros de ponto e muito mais — tudo por uma interface visual intuitiva.
+
+Com as funções exportadas, você pode:
+- Consultar grupos cadastrados e suas informações;
+- Manipular o saldo de um grupo (adicionar, definir ou remover);
+- Criar e deletar eventos no calendário do grupo;
+- Gerenciar membros: adicionar, remover e alterar cargo;
+- Alterar permissões de um cargo dentro do grupo;
+- Criar e remover convites;
+- Verificar se um jogador possui determinada permissão;
+- Pagar e coletar salários;
+- Obter a foto de perfil escolhida pelo jogador;
+- E integrar essas funcionalidades em qualquer outro sistema do seu servidor.
+
+## Funções Exportadas
+
+### Server-side
+
+- [getGroups](#getgroups) -> `Retorna todos os grupos cadastrados`
+- [getGroupInfo](#getgroupinfo) -> `Retorna as informações de um grupo específico`
+- [getPlayerGroups](#getplayergroups) -> `Retorna os grupos em que um jogador está`
+- [getOfficePlayer](#getofficeplayer) -> `Retorna o cargo de um jogador em um grupo`
+- [getPlayerProfilePhoto](#getplayerprofilephoto) -> `Retorna a foto de perfil escolhida pelo jogador`
+- [addGroupBalance](#addgroupbalance) -> `Adiciona saldo ao grupo`
+- [setGroupBalance](#setgroupbalance) -> `Define o saldo do grupo`
+- [removeGroupBalance](#removegroupbalance) -> `Remove saldo do grupo`
+- [createGroupEvent](#creategroupevent) -> `Cria um evento no calendário do grupo`
+- [deleteGroupEvent](#deletegroupevent) -> `Deleta um evento do calendário`
+- [setPlayerRoleInGroup](#setplayerrole-ingroup) -> `Altera o cargo de um membro`
+- [changeGroupPermissionRole](#changegrouppermissionrole) -> `Altera uma permissão de um cargo`
+- [createInvite](#createinvite) -> `Envia um convite para um jogador`
+- [removeInvite](#removeinvite) -> `Remove um convite pendente`
+- [addPlayerToGroup](#addplayertogroup) -> `Adiciona um jogador diretamente a um grupo`
+- [removePlayerFromGroup](#removeplayerfromgroup) -> `Remove um jogador de um grupo`
+- [editGroupInfo](#editgroupinfo) -> `Edita informações gerais do grupo`
+- [playerHasPermission](#playerhaspermission) -> `Verifica se um jogador tem uma permissão no grupo`
+- [verifyGroup](#verifygroup) -> `Marca/desmarca um grupo como verificado (oficial)`
+- [deleteGroup](#deletegroup) -> `Deleta um grupo permanentemente`
+- [payGroupSalary](#paygroupsalary) -> `Paga os salários de todos os membros de um grupo`
+- [collectPlayerSalary](#collectplayersalary) -> `Coleta os salários pendentes de um jogador`
+- [managePanels](#managepanels) -> `Abre painéis específicos do sistema para um jogador`
+
+---
+
+## getGroups
+
+**Side:** `server`
+
+**Syntax**
+```lua
+local groups = exports['sqh_groups']:getGroups()
+```
+
+**Return**
+- `table` com todos os grupos cadastrados, indexados pelo `groupID` (número).
+- Cada entrada contém: `nameGroup`, `members`, `events`, `balance`, `offices`, `activities`, `groupInfos`, `configurations`, `invites`.
+
+**Example**
+```lua
+-- SERVER-SIDE
+addCommandHandler('listargrupos', function(player)
+    local groups = exports['sqh_groups']:getGroups()
+    local count = 0
+    for _ in pairs(groups) do count = count + 1 end
+    outputChatBox('Total de grupos: ' .. count, player)
+end)
+```
+
+---
+
+## getGroupInfo
+
+**Side:** `server`
+
+**Syntax**
+```lua
+local group = exports['sqh_groups']:getGroupInfo(groupID)
+```
+
+**Required arguments**
+- `groupID` (`number`): ID do grupo.
+
+**Return**
+- `table` com todas as informações do grupo em sucesso.
+- `false` se o grupo não existir.
+
+**Example**
+```lua
+-- SERVER-SIDE
+addCommandHandler('infogrupo', function(player, _, groupID)
+    local group = exports['sqh_groups']:getGroupInfo(tonumber(groupID))
+    if group then
+        outputChatBox('Grupo: ' .. group.nameGroup .. ' | Membros: ' .. #group.members, player)
+    else
+        outputChatBox('Grupo não encontrado.', player)
+    end
+end)
+```
+
+---
+
+## getPlayerGroups
+
+**Side:** `server`
+
+**Syntax**
+```lua
+local groups = exports['sqh_groups']:getPlayerGroups(player)
+```
+
+**Required arguments**
+- `player` (`player`): elemento do jogador.
+
+**Return**
+- `table` com a lista de grupos do jogador (`{ {groupID = X}, ... }`).
+- `false` se não encontrado ou sem grupos.
+
+**Example**
+```lua
+-- SERVER-SIDE
+addCommandHandler('meusgrupos', function(player)
+    local groups = exports['sqh_groups']:getPlayerGroups(player)
+    if groups then
+        outputChatBox('Você está em ' .. #groups .. ' grupo(s).', player)
+    else
+        outputChatBox('Você não está em nenhum grupo.', player)
+    end
+end)
+```
+
+---
+
+## getOfficePlayer
+
+**Side:** `server`
+
+**Syntax**
+```lua
+local office = exports['sqh_groups']:getOfficePlayer(player, groupID)
+```
+
+**Required arguments**
+- `player` (`player`): elemento do jogador.
+- `groupID` (`number`): ID do grupo.
+
+**Return**
+- `table` com campos:
+  - `officeRank` (`number`): hierarquia do cargo (número menor = cargo mais alto).
+  - `roleName` (`string`): nome do cargo.
+  - `officeID` (`number`): ID interno do cargo.
+- `false` em falha.
+
+**Example**
+```lua
+-- SERVER-SIDE
+addCommandHandler('meucargo', function(player, _, groupID)
+    local office = exports['sqh_groups']:getOfficePlayer(player, tonumber(groupID))
+    if office then
+        outputChatBox('Cargo: ' .. office.roleName .. ' (hierarquia ' .. office.officeRank .. ')', player)
+    end
+end)
+```
+
+---
+
+## getPlayerProfilePhoto
+
+**Side:** `server`
+
+**Syntax**
+```lua
+local photo = exports['sqh_groups']:getPlayerProfilePhoto(player)
+```
+
+**Required arguments**
+- `player` (`player`): elemento do jogador.
+
+**Return**
+- Valor/índice da foto de perfil escolhida pelo jogador em sucesso.
+- `false` em falha.
+
+**Example**
+```lua
+-- SERVER-SIDE
+addCommandHandler('fotoperfil', function(player)
+    local photo = exports['sqh_groups']:getPlayerProfilePhoto(player)
+    outputChatBox('Foto de perfil: ' .. tostring(photo), player)
+end)
+```
+
+---
+
+## addGroupBalance
+
+**Side:** `server`
+
+**Syntax**
+```lua
+exports['sqh_groups']:addGroupBalance(groupID, value)
+```
+
+**Required arguments**
+- `groupID` (`number`): ID do grupo.
+- `value` (`number`): valor a ser adicionado.
+
+**Behavior**
+- Soma o valor ao saldo atual do grupo.
+- Registra automaticamente a entrada no histórico financeiro do dia atual.
+- Salva na database.
+
+**Example**
+```lua
+-- SERVER-SIDE
+addCommandHandler('depositargrupo', function(player, _, groupID, value)
+    exports['sqh_groups']:addGroupBalance(tonumber(groupID), tonumber(value))
+    outputChatBox('Depósito realizado.', player)
+end)
+```
+
+---
+
+## setGroupBalance
+
+**Side:** `server`
+
+**Syntax**
+```lua
+exports['sqh_groups']:setGroupBalance(groupID, value)
+```
+
+**Required arguments**
+- `groupID` (`number`): ID do grupo.
+- `value` (`number`): novo saldo.
+
+**Behavior**
+- Define o saldo do grupo para exatamente o valor informado (sobrescreve o atual).
+- Salva na database.
+
+**Example**
+```lua
+-- SERVER-SIDE
+exports['sqh_groups']:setGroupBalance(1, 50000)
+```
+
+---
+
+## removeGroupBalance
+
+**Side:** `server`
+
+**Syntax**
+```lua
+exports['sqh_groups']:removeGroupBalance(groupID, value)
+```
+
+**Required arguments**
+- `groupID` (`number`): ID do grupo.
+- `value` (`number`): valor a ser subtraído.
+
+**Behavior**
+- Subtrai o valor do saldo atual do grupo.
+- Registra automaticamente a saída no histórico financeiro do dia atual.
+- Salva na database.
+
+**Example**
+```lua
+-- SERVER-SIDE
+addCommandHandler('retirargrupo', function(player, _, groupID, value)
+    exports['sqh_groups']:removeGroupBalance(tonumber(groupID), tonumber(value))
+    outputChatBox('Retirada realizada.', player)
+end)
+```
+
+---
+
+## createGroupEvent
+
+**Side:** `server`
+
+**Syntax**
+```lua
+exports['sqh_groups']:createGroupEvent(groupID, eventName, durationEvent, iconEvent, startTimestamp, monthCreation, dayCreation)
+```
+
+**Required arguments**
+- `groupID` (`number`): ID do grupo.
+- `eventName` (`string`): nome do evento.
+- `durationEvent` (`number`): duração do evento (em segundos ou conforme seu padrão).
+- `iconEvent` (`string`): ícone do evento.
+- `startTimestamp` (`number`): timestamp Unix de início do evento (deve ser no futuro).
+- `monthCreation` (`number`): número do mês em que o evento está sendo criado.
+- `dayCreation` (`number`): dia do mês em que o evento está sendo criado.
+
+**Return**
+- `false` se `startTimestamp` for menor ou igual ao momento atual.
+
+**Example**
+```lua
+-- SERVER-SIDE
+local futuro = os.time() + (24 * 60 * 60) -- amanhã
+exports['sqh_groups']:createGroupEvent(1, 'Reunião Semanal', 3600, 'ico_work', futuro, os.date('*t').month + 1, os.date('*t').day)
+```
+
+---
+
+## deleteGroupEvent
+
+**Side:** `server`
+
+**Syntax**
+```lua
+exports['sqh_groups']:deleteGroupEvent(groupID, eventTimestamp, eventName)
+```
+
+**Required arguments**
+- `groupID` (`number`): ID do grupo.
+- `eventTimestamp` (`number`): timestamp do evento a deletar.
+- `eventName` (`string`): nome do evento (usado para confirmar qual deletar quando há múltiplos no mesmo horário).
+
+**Example**
+```lua
+-- SERVER-SIDE
+exports['sqh_groups']:deleteGroupEvent(1, 1740000000, 'Reunião Semanal')
+```
+
+---
+
+## setPlayerRoleInGroup
+
+**Side:** `server`
+
+**Syntax**
+```lua
+exports['sqh_groups']:setPlayerRoleInGroup(player, groupID, roleName)
+```
+
+**Required arguments**
+- `player` (`player`): elemento do jogador que terá o cargo alterado.
+- `groupID` (`number`): ID do grupo.
+- `roleName` (`string`): nome exato do cargo (deve existir dentro do grupo).
+
+**Example**
+```lua
+-- SERVER-SIDE
+addCommandHandler('promover', function(player, _, targetName, groupID, role)
+    local target = getPlayerFromName(targetName)
+    if target then
+        exports['sqh_groups']:setPlayerRoleInGroup(target, tonumber(groupID), role)
+    end
+end)
+```
+
+---
+
+## changeGroupPermissionRole
+
+**Side:** `server`
+
+**Syntax**
+```lua
+exports['sqh_groups']:changeGroupPermissionRole(groupID, roleName, permission, status)
+```
+
+**Required arguments**
+- `groupID` (`number`): ID do grupo.
+- `roleName` (`string`): nome do cargo.
+- `permission` (`string`): nome da permissão (ex: `'accessChat'`, `'manageMembers'`, `'administrator'`, etc.).
+- `status` (`boolean`): `true` para ativar, `false` para desativar.
+
+**Permissões disponíveis**
+
+| Permissão | Descrição |
+|---|---|
+| `accessCalendar` | Acessar o calendário |
+| `accessChat` | Acessar o chat interno |
+| `accessUtilities` | Acessar o painel de utilidades |
+| `accessData` | Acessar dados e estatísticas |
+| `accessFinancial` | Acessar o financeiro |
+| `accessManager` | Acessar o gerenciador |
+| `addEvents` | Criar eventos no calendário |
+| `removeEvents` | Remover eventos do calendário |
+| `punchCard` | Bater ponto |
+| `depositBalance` | Depositar saldo |
+| `withdrawBalance` | Retirar saldo |
+| `paySalaries` | Pagar salários |
+| `sendMessageGeneral` | Enviar mensagem para todos os cargos |
+| `sendMessageByRole` | Enviar mensagem pelo cargo |
+| `editGroupSettings` | Editar configurações do grupo |
+| `manageMembers` | Gerenciar membros |
+| `manageRoles` | Gerenciar cargos |
+| `manageInvitations` | Gerenciar convites |
+| `accessGroupDataLogs` | Acessar logs do grupo |
+| `administrator` | Acesso total (administrador) |
+| `kickMembers` | Expulsar membros |
+
+**Example**
+```lua
+-- SERVER-SIDE
+-- Liberar acesso ao chat para o cargo "Membro" no grupo 1
+exports['sqh_groups']:changeGroupPermissionRole(1, 'Membro', 'accessChat', true)
+```
+
+---
+
+## createInvite
+
+**Side:** `server`
+
+**Syntax**
+```lua
+exports['sqh_groups']:createInvite(playerInviter, groupID, player)
+```
+
+**Required arguments**
+- `playerInviter` (`player`): jogador que está enviando o convite.
+- `groupID` (`number`): ID do grupo para onde está convidando.
+- `player` (`player`): jogador que está sendo convidado.
+
+**Behavior**
+- Verifica se o jogador já está no grupo ou já tem convite pendente.
+- Verifica se o jogador-alvo permite receber convites.
+- Registra o convite no grupo e no perfil do jogador-alvo.
+
+**Example**
+```lua
+-- SERVER-SIDE
+addCommandHandler('convidar', function(player, _, targetName, groupID)
+    local target = getPlayerFromName(targetName)
+    if target then
+        exports['sqh_groups']:createInvite(player, tonumber(groupID), target)
+    end
+end)
+```
+
+---
+
+## removeInvite
+
+**Side:** `server`
+
+**Syntax**
+```lua
+exports['sqh_groups']:removeInvite(groupID, player)
+```
+
+**Required arguments**
+- `groupID` (`number`): ID do grupo.
+- `player` (`player`): jogador cujo convite será removido.
+
+**Example**
+```lua
+-- SERVER-SIDE
+exports['sqh_groups']:removeInvite(1, player)
+```
+
+---
+
+## addPlayerToGroup
+
+**Side:** `server`
+
+**Syntax**
+```lua
+exports['sqh_groups']:addPlayerToGroup(groupID, player)
+```
+
+**Required arguments**
+- `groupID` (`number`): ID do grupo.
+- `player` (`player`): jogador a ser adicionado.
+
+**Behavior**
+- Adiciona o jogador ao grupo com o cargo de menor hierarquia disponível.
+- Se `aclConfigurations.systemAclActive = true`, adiciona o jogador à ACL do grupo automaticamente.
+- Salva o grupo no perfil do jogador.
+
+**Example**
+```lua
+-- SERVER-SIDE
+addCommandHandler('adicionargrupo', function(player, _, targetName, groupID)
+    local target = getPlayerFromName(targetName)
+    if target then
+        exports['sqh_groups']:addPlayerToGroup(tonumber(groupID), target)
+        outputChatBox('Jogador adicionado ao grupo.', player)
+    end
+end)
+```
+
+---
+
+## removePlayerFromGroup
+
+**Side:** `server`
+
+**Syntax**
+```lua
+exports['sqh_groups']:removePlayerFromGroup(groupID, player)
+```
+
+**Required arguments**
+- `groupID` (`number`): ID do grupo.
+- `player` (`player`): jogador a ser removido.
+
+**Behavior**
+- Remove o jogador da lista de membros do grupo.
+- Remove o grupo do perfil do jogador.
+- Se `aclConfigurations.systemAclActive = true`, remove o jogador da ACL do grupo.
+
+**Example**
+```lua
+-- SERVER-SIDE
+addCommandHandler('expulsargrupo', function(player, _, targetName, groupID)
+    local target = getPlayerFromName(targetName)
+    if target then
+        exports['sqh_groups']:removePlayerFromGroup(tonumber(groupID), target)
+        outputChatBox('Jogador removido do grupo.', player)
+    end
+end)
+```
+
+---
+
+## editGroupInfo
+
+**Side:** `server`
+
+**Syntax**
+```lua
+exports['sqh_groups']:editGroupInfo(groupID, info, value)
+```
+
+**Required arguments**
+- `groupID` (`number`): ID do grupo.
+- `info` (`string`): campo a editar.
+- `value` (`any`): novo valor.
+
+**Campos `info` disponíveis**
+
+| Valor de `info` | Tipo de `value` | O que muda |
+|---|---|---|
+| `'nameGroup'` | `string` | Nome do grupo |
+| `'membersLimit'` | `number` | Limite máximo de membros |
+| `'descriptionGroup'` | `string` | Descrição do grupo |
+| `'visibilityGroup'` | `boolean` | Visibilidade pública (`true`) ou privada (`false`) |
+
+**Example**
+```lua
+-- SERVER-SIDE
+exports['sqh_groups']:editGroupInfo(1, 'nameGroup', 'Novo Nome')
+exports['sqh_groups']:editGroupInfo(1, 'membersLimit', 30)
+exports['sqh_groups']:editGroupInfo(1, 'visibilityGroup', true)
+```
+
+---
+
+## playerHasPermission
+
+**Side:** `server`
+
+**Syntax**
+```lua
+local hasPerm = exports['sqh_groups']:playerHasPermission(player, groupID, permissionName)
+```
+
+**Required arguments**
+- `player` (`player`): elemento do jogador.
+- `groupID` (`number`): ID do grupo.
+- `permissionName` (`string`): nome da permissão (ver tabela em [changeGroupPermissionRole](#changegrouppermissionrole)).
+
+**Return**
+- `true` se o jogador possui a permissão (ou é dono/administrador do grupo).
+- `false` caso contrário.
+
+**Example**
+```lua
+-- SERVER-SIDE
+addCommandHandler('verificarpermissao', function(player, _, groupID, perm)
+    local has = exports['sqh_groups']:playerHasPermission(player, tonumber(groupID), perm)
+    outputChatBox(has and 'Tem permissão' or 'Não tem permissão', player)
+end)
+```
+
+---
+
+## verifyGroup
+
+**Side:** `server`
+
+**Syntax**
+```lua
+exports['sqh_groups']:verifyGroup(groupID, value)
+```
+
+**Required arguments**
+- `groupID` (`number`): ID do grupo.
+- `value` (`boolean`): `true` para marcar como verificado/oficial, `false` para remover.
+
+**Example**
+```lua
+-- SERVER-SIDE
+exports['sqh_groups']:verifyGroup(1, true)  -- Marca o grupo 1 como oficial
+exports['sqh_groups']:verifyGroup(1, false) -- Remove a verificação
+```
+
+---
+
+## deleteGroup
+
+**Side:** `server`
+
+**Syntax**
+```lua
+exports['sqh_groups']:deleteGroup(groupID)
+```
+
+**Required arguments**
+- `groupID` (`number`): ID do grupo a ser deletado.
+
+**Behavior**
+- Remove o grupo de todos os perfis de membros e pendencias de convites.
+- Deleta a imagem de logo do grupo (se existir).
+- Remove o histórico de chat do grupo.
+- Se `aclConfigurations.systemAclActive = true`, destrói a ACL do grupo.
+- Remove da database permanentemente.
+
+**Example**
+```lua
+-- SERVER-SIDE
+addCommandHandler('deletargrupo', function(player, _, groupID)
+    exports['sqh_groups']:deleteGroup(tonumber(groupID))
+    outputChatBox('Grupo deletado.', player)
+end)
+```
+
+---
+
+## payGroupSalary
+
+**Side:** `server`
+
+**Syntax**
+```lua
+local success, result = exports['sqh_groups']:payGroupSalary(groupID, payerElement, deductBalance)
+```
+
+**Required arguments**
+- `groupID` (`number`): ID do grupo.
+- `payerElement` (`player`): jogador que está realizando o pagamento (usado nos logs). Pode ser `nil` para usar o dono do grupo.
+
+**Optional arguments**
+- `deductBalance` (`boolean`): se `false`, os salários são registrados **sem descontar** o saldo do grupo. Padrão: `true`.
+
+**Return**
+- `true` em sucesso.
+- `false, "insufficient_balance"` se o saldo do grupo for insuficiente.
+- `false, "group_not_found"` se o grupo não existir.
+- `false, "license"` se a licença for inválida.
+
+**Example**
+```lua
+-- SERVER-SIDE
+addCommandHandler('pagarsalarios', function(player, _, groupID)
+    local ok, err = exports['sqh_groups']:payGroupSalary(tonumber(groupID), player)
+    if ok then
+        outputChatBox('Salários pagos com sucesso!', player)
+    else
+        outputChatBox('Erro: ' .. tostring(err), player)
+    end
+end)
+```
+
+```lua
+-- Registrar salários sem descontar do saldo (útil para sistemas de recompensa externa)
+exports['sqh_groups']:payGroupSalary(1, nil, false)
+```
+
+---
+
+## collectPlayerSalary
+
+**Side:** `server`
+
+**Syntax**
+```lua
+local success, result = exports['sqh_groups']:collectPlayerSalary(playerElement, groupID)
+```
+
+**Required arguments**
+- `playerElement` (`player`): jogador que irá coletar os salários.
+
+**Optional arguments**
+- `groupID` (`number`): se informado, coleta apenas os salários deste grupo. Se `nil`, coleta **todos** os pendentes.
+
+**Return**
+- `true, valorTotal` em sucesso — o valor total coletado é enviado automaticamente ao jogador conforme `widthdrawConfigurations`.
+- `false, "no_pending_salary"` se não há salários pendentes.
+- `false, "player_not_found"` se o jogador não estiver na database.
+- `false, "license"` se a licença for inválida.
+
+**Example**
+```lua
+-- SERVER-SIDE: coletar todos os salários pendentes
+addCommandHandler('coletarsalario', function(player)
+    local ok, value = exports['sqh_groups']:collectPlayerSalary(player)
+    if ok then
+        outputChatBox('Você coletou R$ ' .. tostring(value) .. ' em salários!', player)
+    else
+        outputChatBox('Sem salários pendentes.', player)
+    end
+end)
+```
+
+```lua
+-- SERVER-SIDE: coletar salários apenas de um grupo específico
+exports['sqh_groups']:collectPlayerSalary(player, 1)
+```
+
+---
+
+## managePanels
+
+**Side:** `server`
+
+**Syntax**
+```lua
+exports['sqh_groups']:managePanels(typeManage, groupID, tableArguments)
+```
+
+**Required arguments**
+- `typeManage` (`string`): tipo de painel a abrir (ver tabela abaixo).
+- `groupID` (`number`): ID do grupo (necessário em alguns tipos).
+- `tableArguments` (`table`): argumentos adicionais (pode ser `nil` dependendo do tipo).
+
+**Valores de `typeManage`**
+
+| Valor | O que faz | `groupID` necessário? |
+|---|---|---|
+| `'openPanel'` | Abre o painel principal de grupos para o jogador | Não |
+| `'openDashboardGroups'` | Abre o dashboard de um grupo específico | Sim |
+| `'openFinancesGroups'` | Abre a aba financeira do grupo | Sim |
+| `'openCalendarGroups'` | Abre o calendário do grupo | Sim |
+| `'openChatGroups'` | Abre o chat interno do grupo | Sim |
+| `'openDatasGroups'` | Abre a aba de dados/relatórios do grupo | Sim |
+
+**Example**
+```lua
+-- SERVER-SIDE: abrir o painel principal para o jogador
+addCommandHandler('painel', function(player)
+    exports['sqh_groups']:managePanels('openPanel', nil, nil)
+end)
+```
+
+```lua
+-- SERVER-SIDE: abrir o dashboard de um grupo específico
+addCommandHandler('dashboard', function(player, _, groupID)
+    exports['sqh_groups']:managePanels('openDashboardGroups', tonumber(groupID), nil)
+end)
+```
+
+---
+
+## Observações
+
+- Todas as exports exigem que o resource esteja ativo e com licença válida.
+- As funções acima seguem exatamente o que está exportado no `meta.xml` do `sqh_groups`.
+- O `source` utilizado internamente nas notificações e triggers se refere ao jogador que chamou o evento. Ao usar as exports de outros resources, certifique-se de que o contexto de `source` seja o correto.

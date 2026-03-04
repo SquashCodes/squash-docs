@@ -1,0 +1,483 @@
+---
+title: Configurações Multi Characters
+description: "Guia completo dos arquivos config/main.lua e config/settings.lua do Multi Characters."
+---
+
+
+## Resolva problemas comuns
+
+<CardGroup cols={2}>
+  <Card
+    title="Resource não inicia"
+    icon="gear"
+    href="/pt/start"
+  >
+   Está com problemas para iniciar o seu produto? Clique aqui
+  </Card>
+    <Card
+    title="Configurar o resource"
+    icon="gear"
+    href="/pt/resources/multicharacters#como-configurar-o-resource"
+  >
+   Está com dúvidas de como configurar algo no sistema? Clique aqui
+  </Card>
+</CardGroup>
+
+<img
+  src="/images/ashy-help.png"
+  alt="Hero Dark"
+/>
+
+## Sobre o sistema
+A proposta do Multi Characters é oferecer um sistema completo de múltiplos personagens com identidade visual, documentação (passaporte), cutscene de entrada e total integração com outros sistemas do servidor.
+
+## Visão Geral
+
+Este guia cobre **todos os arquivos** `config/main.lua` e `config/settings.lua`.
+
+Objetivo:
+- Você entender exatamente o que cada opção muda.
+- Você conectar o sistema ao seu servidor sem precisar mexer no código-fonte.
+- Você configurar personagens, passaporte, banco de dados e integrações de forma independente.
+
+## Antes de Começar
+
+- Arquivos de configuração: `config/main.lua` (servidor) e `config/settings.lua` (compartilhado)
+- Depois de alterar a config: reinicie o resource (`restart sqh_multicharacters`)
+- Regra geral:
+  - `true` = ativa a função
+  - `false` = desativa a função
+
+---
+
+## 1) `license`
+
+Credenciais de ativação do produto. Localizado no topo do `config/main.lua`.
+
+| Campo | Descrição |
+|---|---|
+| `Email` | E-mail da conta Squash Codes que adquiriu o produto. |
+| `Key` | Chave de licença fornecida após a compra. |
+
+```lua
+license = {
+    ["Email"] = "seu@email.com",
+    ["Key"] = "SQUASH-XXXX-XXXX",
+}
+```
+
+---
+
+## 2) `database`
+
+Configuração do banco de dados. Localizado em `config/main.lua`.
+
+| Campo | Descrição |
+|---|---|
+| `database` | Tipo de conexão: `"sqlite"` ou `"mysql"`. |
+| `sqlite_archive` | Caminho do arquivo SQLite (ignorado se usar mysql). |
+| `mysqlparameters.hostname` | IP ou hostname do servidor MySQL. |
+| `mysqlparameters.port` | Porta do MySQL. |
+| `mysqlparameters.username` | Usuário do banco. |
+| `mysqlparameters.password` | Senha do banco. |
+| `mysqlparameters.database` | Nome do banco de dados. |
+
+```lua
+database = {
+    database = "mysql",
+    mysqlparameters = {
+        hostname = "127.0.0.1",
+        port = "3306",
+        username = "root",
+        password = "suasenha",
+        database = "nome_do_banco"
+    },
+    sqlite_archive = "assets/database/Database.db",
+}
+```
+
+---
+
+## 3) `useCustomSquash`
+
+Define se o sistema de customização de personagens da Squash Codes será usado.
+
+| Valor | Efeito |
+|---|---|
+| `true` | Integra com o produto `CustomSite` para skin, skintone e roupas. |
+| `false` | Usa o modelo padrão definido em `setPedDefaultInfos`. |
+
+```lua
+useCustomSquash = false
+```
+
+---
+
+## 4) `serverConfig`
+
+Bloco principal de configuração do servidor. Localizado em `config/main.lua`.
+
+### `pointsElementData`
+
+| Valor | Efeito |
+|---|---|
+| `true` | Os pontos do jogador são lidos/escritos via `elementData`. |
+| `false` | Os pontos são gerenciados de outra forma (definida em `getPointsPlayer`). |
+
+---
+
+### `blockChangeName`
+
+| Valor | Efeito |
+|---|---|
+| `true` | Impede que o jogador mude seu próprio nome pelo menu ESC do MTA. |
+| `false` | Permite mudança de nome pelo ESC normalmente. |
+
+---
+
+### `nameSeparator`
+
+Separador entre nome e sobrenome nos comandos `/changenick` e `/deleteperson`.
+
+```lua
+nameSeparator = "@", -- João@Silva
+```
+
+Com `"@"`, o comando fica: `/changenick João@Silva NovoNome@NovoSobrenome`
+
+---
+
+### `functions`
+
+Funções de integração com o seu servidor. Você deve adaptá-las para o seu sistema.
+
+| Função | O que faz | O que deve retornar |
+|---|---|---|
+| `getPlayerID(player)` | Retorna o ID numérico do jogador | `number` |
+| `getPlayerJob(player)` | Retorna o cargo/emprego do jogador | `string` |
+| `getAccountMainIdentifier(player)` | Retorna o identificador principal da conta (normalmente o nome da conta MTA) | `string` |
+| `getPointsPlayer(player)` | Retorna a quantidade de pontos/coins do jogador | `number` |
+| `takePointsPlayer(player, points)` | Debita pontos do jogador | qualquer |
+| `getPlayerMoney(player)` | Retorna o dinheiro do jogador | `number` |
+| `takePlayerMoney(player, amount)` | Debita dinheiro do jogador | qualquer |
+| `getLastSkin(player)` | Retorna a última skin do jogador | `number` (model ID) |
+| `setPedDefaultInfos(player, pedElement)` | Define ped do lobby quando não há personagem criado | — |
+| `setPedInfos(player, pedElement, personData)` | Define ped do lobby com dados do personagem carregado | — |
+
+**Exemplo de integração simples:**
+```lua
+getPlayerJob = function(player)
+    return getElementData(player, "trabalho") or "Desempregado"
+end,
+getPointsPlayer = function(player)
+    return getElementData(player, "pontos") or 0
+end,
+takePointsPlayer = function(player, points)
+    setElementData(player, "pontos", (getElementData(player, "pontos") or 0) - points)
+end,
+```
+
+---
+
+### `commands`
+
+Define os comandos administrativos disponíveis.
+
+#### `commands.changeName`
+
+Comando para alterar o nome de um personagem.
+
+| Campo | Descrição |
+|---|---|
+| `commandName` | Nome do comando (padrão: `'changenick'`). |
+| `permissionToUse(player)` | Função que retorna `true` se o jogador pode usar o comando. |
+
+**Uso:** `/changenick Nome@Sobrenome_antigo NovoNome@NovoSobrenome`
+
+#### `commands.deleteperson`
+
+Comando para deletar um personagem.
+
+| Campo | Descrição |
+|---|---|
+| `commandName` | Nome do comando (padrão: `'deleteperson'`). |
+| `permissionToUse(player)` | Função que retorna `true` se o jogador pode usar o comando. |
+
+**Uso:** `/deleteperson Nome@Sobrenome`
+
+---
+
+### `events`
+
+Callbacks disparados em momentos específicos do ciclo de vida dos personagens.
+
+| Evento | Quando é chamado | Parâmetros |
+|---|---|---|
+| `onCreatePed(ped)` | Quando o ped do lobby é criado | `ped`: element do ped criado |
+| `onLoginPlayer(player)` | Quando o jogador seleciona e carrega um personagem | `player` |
+| `onFinishCutscene(player)` | Quando a cutscene de chegada termina | `player` |
+| `onBuyPerson(player, quantityPersons)` | Quando o jogador compra um novo slot de personagem | `quantityPersons`: total de personagens após a compra |
+| `onCreatePerson(player, quantityPersons, personID, actualAccount)` | Quando o jogador cria um personagem (após preencher os dados) | `personID`: ID gerado, `actualAccount`: conta MTA principal |
+| `onStartCreationCharacter(player)` | Quando o painel de personagens é aberto | `player` |
+
+**Exemplo:**
+```lua
+events = {
+    onLoginPlayer = function(player)
+        setElementPosition(player, 1092, -794, 108)
+        triggerClientEvent(player, 'carregarHUD', player)
+    end,
+    onCreatePerson = function(player, quantityPersons, personID, actualAccount)
+        outputChatBox("Novo personagem criado! ID: " .. personID, player)
+    end,
+}
+```
+
+---
+
+## 5) `events` (settings.lua — client-side)
+
+Callbacks de abertura e fechamento do painel. Localizado em `config/settings.lua`.
+
+| Callback | Quando acontece | Uso típico |
+|---|---|---|
+| `onOpenPanel(player)` | Quando qualquer painel do sistema abre | Mostrar cursor, esconder chat |
+| `onClosePanel(player)` | Quando qualquer painel do sistema fecha | Esconder cursor, mostrar chat |
+
+```lua
+events = {
+    onOpenPanel = function(player)
+        showCursor(true)
+        showChat(false)
+    end,
+    onClosePanel = function(player)
+        showCursor(false)
+        showChat(true)
+    end
+}
+```
+
+---
+
+## 6) `config.infobox`
+
+Define como as notificações do sistema são exibidas.
+
+| Campo | Lado | Descrição |
+|---|---|---|
+| `server` | Server | Função chamada para exibir infobox pelo servidor |
+| `client` | Client | Função chamada para exibir infobox pelo client |
+
+Adapte para o seu sistema de infobox:
+```lua
+infobox = {
+    ['server'] = function(source, message, type)
+        exports["seu_infobox"]:addServerInfobox(source, message, type)
+    end,
+    ['client'] = function(source, message, type)
+        exports["seu_infobox"]:addClientInfobox(message, type)
+    end,
+},
+```
+
+---
+
+## 7) `config.logs`
+
+Configuração dos logs de anti-cheat enviados ao Discord.
+
+| Opção | Descrição |
+|---|---|
+| `enabled` | `true` ativa os logs, `false` desativa. |
+| `webhookURL` | URL do webhook do Discord para receber os alertas. |
+| `logLanguage` | Idioma das mensagens: `"pt"`, `"en"` ou `"es"`. |
+
+---
+
+## 8) Opções gerais (`config`)
+
+Localizado em `config/settings.lua`.
+
+| Opção | `true` / valor | `false` / efeito |
+|---|---|---|
+| `maxPersons` | Número máximo de personagens por jogador (ex: `7`) | — |
+| `saveLastSkinPlayer` | Salva a skin do personagem ao sair para exibir no lobby | Não salva (use para Custom) |
+| `keyClosePassport` | Tecla para fechar o passaporte (ex: `'backspace'`) | — |
+| `openCutsceneDefault` | `true` exibe a cutscene automaticamente ao entrar | `false` desativa cutscene automática |
+| `openPanelLogin` | `true` abre o painel de personagens automaticamente ao logar | `false` só abre via export |
+| `namePersonWithoutAccountMain` | `true`: conta MTA = `"Nome@Sobrenome"` | `false`: conta MTA = `"ContaPrincipal@Nome_Sobrenome_"` |
+| `nameSeparator` | Separador entre nome e sobrenome em toda a geração de contas (ex: `"@"`) | — |
+
+---
+
+## 9) `config.serverInfos`
+
+Informações do servidor exibidas no passaporte.
+
+| Campo | Descrição |
+|---|---|
+| `name` | Nome completo do servidor. |
+| `city` | Nome da cidade exibido no passaporte. |
+| `slug` | Sigla/código do servidor (aparece como emissor no passaporte). |
+
+```lua
+serverInfos = {
+    name = "HAVANNA ROLEPLAY",
+    city = "CIDADE DE HAVANNA",
+    slug = "HVN",
+},
+```
+
+---
+
+## 10) `config.persons_page`
+
+Configurações da tela de seleção de personagens.
+
+### `camera`
+
+| Campo | Descrição |
+|---|---|
+| `from` | Posição inicial da câmera `{x, y, z, lx, ly, lz}` |
+| `to` | Posição final da câmera `{x, y, z, lx, ly, lz}` |
+| `timeAnimation` | Tempo em segundos da animação da câmera ao entrar na tela |
+
+### `ped`
+
+| Campo | Descrição |
+|---|---|
+| `position` | Posição do ped de lobby `{x, y, z}` |
+| `rotation` | Rotação do ped `{x, y, z}` |
+| `animationInfo.active` | `true` ativa animação no ped do lobby |
+| `animationInfo.type` | `"random"` ou `"sequential"` |
+| `animationInfo.animations` | Lista de animações: `{block, anim, time}` |
+
+### `musics`
+
+Lista de músicas tocadas no lobby.
+
+Cada item aceita:
+- `musicLink` (`string`): URL da música
+- `name` (`string`): nome da faixa
+- `author` (`string`): artista
+- `album` (`string`): álbum
+- `musicImage` (`string` ou `false`): URL da imagem da capa
+
+### `persons`
+
+Configurações dos slots de personagem.
+
+| Campo | Descrição |
+|---|---|
+| `maxPersons` | Máximo de slots de personagem visíveis no carrossel |
+| `pricePersons` | Tabela com o custo de cada slot adicional `{0, 500, 1000, ...}` |
+
+### `notifications`
+
+Lista de notificações exibidas na tela de lobby.
+
+Cada notificação aceita:
+- `title` (`string`): título da notificação
+- `description` (`string`): corpo do texto
+- `type` (`string`): tipo visual (`"info"`, `"warning"`, `"success"`, etc.)
+
+---
+
+## 11) `config.passport_emission`
+
+Configurações da criação do passaporte (primeira vez que o personagem é criado).
+
+| Opção | Descrição |
+|---|---|
+| `minNameDigits` | Mínimo de caracteres para o nome |
+| `maxNameDigits` | Máximo de caracteres para o nome |
+| `minSurnameDigits` | Mínimo de caracteres para o sobrenome |
+| `maxSurnameDigits` | Máximo de caracteres para o sobrenome |
+| `minAge` | Idade mínima em anos para criar o personagem |
+| `secondsAssign` | Segundos que o jogador deve segurar para assinar o documento |
+| `expiresAfter` | Validade do passaporte em dias após a criação |
+| `cameraPlayerPosition` | Posição da câmera para a foto do rosto: `{x, y, z, lx, ly, lz, w, h}` |
+
+---
+
+## 12) `config.passport_renews`
+
+Configurações do sistema de renovação de passaporte.
+
+| Opção | Descrição |
+|---|---|
+| `price` | Custo em dinheiro para renovar o passaporte |
+| `enableMarkers` | `true` cria markers no mapa para renovação |
+| `createBlip` | `true` cria blip no mapa junto com o marker |
+| `blipElementData` | `false` ou `{chave, valor}` para criar blip via elementData |
+
+### `allowedEditions`
+
+Define quais campos o jogador pode editar na renovação.
+
+| Campo | `true` | `false` |
+|---|---|---|
+| `name` | Permite editar o nome | Bloqueia edição do nome |
+| `surname` | Permite editar o sobrenome | Bloqueia edição do sobrenome |
+| `birthday` | Permite editar a data de nascimento | Bloqueia edição |
+| `nacionality` | Permite editar a nacionalidade | Bloqueia edição |
+| `naturality` | Permite editar a naturalidade | Bloqueia edição |
+| `gender` | Permite editar o gênero | Bloqueia edição |
+
+### `markers`
+
+Lista de posições onde aparecerão os markers de renovação.
+
+```lua
+markers = {
+    {x = 1503.0, y = 1126.7, z = 9.7, type = 'cylinder', size = 3, r = 255, g = 255, b = 0},
+},
+```
+
+### `peds`
+
+Lista de peds que, ao serem clicados, abrem o painel de renovação.
+
+```lua
+peds = {
+    {x = 1500.0, y = 1124.0, z = 10.0, rotation = 90, model = 56}
+},
+```
+
+### `customMarkers`
+
+Função chamada após cada marker ser criado. Use para setar elementData ou customizar o marker.
+
+```lua
+customMarkers = function(marker)
+    setElementData(marker, 'custom:marker', true)
+end,
+```
+
+---
+
+## 13) `config.events` (settings.lua — server-side)
+
+Callback disparado após a cutscene terminar no client.
+
+| Evento | Quando é chamado |
+|---|---|
+| `onFinishCutscene(player)` | Quando a cutscene de chegada termina no client do jogador |
+
+```lua
+events = {
+    onFinishCutscene = function(player)
+        -- reposicionar, dar boas vindas, etc.
+        outputChatBox("Bem-vindo à cidade!", player)
+    end
+}
+```
+
+---
+
+## Boas Práticas
+
+- Altere uma seção por vez e teste no servidor.
+- As funções em `serverConfig.functions` **devem** ser adaptadas para o seu servidor — os valores padrão são apenas exemplos.
+- `namePersonWithoutAccountMain` afeta diretamente o nome das contas MTA geradas. **Não mude essa opção após ter personagens já criados**, pois as contas antigas não serão renomeadas.
+- Depois de salvar qualquer config: `restart sqh_multicharacters`

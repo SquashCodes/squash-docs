@@ -129,11 +129,50 @@
           {
             "group": "Resources",
             "pages": [
-              "pt/resources/phone-system",
+              {
+                "group": "Phone System",
+                "pages": [
+                  "pt/resources/phone-system/exports",
+                  "pt/resources/phone-system/settings"
+                ]
+              },
               "pt/resources/custom-characters",
-              "pt/resources/group-system",
+              {
+                "group": "Groups System",
+                "pages": [
+                  "pt/resources/group-system/exports",
+                  "pt/resources/group-system/settings"
+                ]
+              },
               "pt/resources/accounts",
-              "pt/resources/auth-discord",
+              {
+                "group": "Multicharacters",
+                "pages": [
+                  "pt/resources/multicharacters/exports",
+                  "pt/resources/multicharacters/settings"
+                ]
+              },
+              {
+                "group": "AuthDiscord",
+                "pages": [
+                  "pt/resources/authdiscord/exports",
+                  "pt/resources/authdiscord/settings"
+                ]
+              },
+              {
+                "group": "Whitelist",
+                "pages": [
+                  "pt/resources/whitelist-system/exports",
+                  "pt/resources/whitelist-system/settings"
+                ]
+              },
+              {
+                "group": "Craft System",
+                "pages": [
+                  "pt/resources/craft-system/exports",
+                  "pt/resources/craft-system/settings"
+                ]
+              },
               {
                 "group": "Radar System",
                 "pages": [

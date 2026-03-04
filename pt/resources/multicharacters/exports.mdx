@@ -1,0 +1,367 @@
+---
+title: Exports Multi Characters
+description: "Adquiriu o Multi Characters e está com dúvidas do sistema? você está no lugar certo!"
+---
+
+## Resolva problemas comuns
+
+<CardGroup cols={2}>
+  <Card
+    title="Resource não inicia"
+    icon="gear"
+    href="/pt/start"
+  >
+   Está com problemas para iniciar o seu produto? Clique aqui
+  </Card>
+    <Card
+    title="Configurar o resource"
+    icon="gear"
+    href="/pt/resources/multicharacters#como-configurar-o-resource"
+  >
+   Está com dúvidas de como configurar algo no sistema? Clique aqui
+  </Card>
+</CardGroup>
+
+<img
+  src="/images/ashy-help.png"
+  alt="Hero Dark"
+/>
+
+## Sobre o sistema
+A proposta do Multi Characters é oferecer um sistema completo de múltiplos personagens com identidade visual, documentação (passaporte), cutscene de entrada e total integração com outros sistemas do servidor.
+
+Com as funções exportadas, você pode:
+- Abrir o painel de seleção de personagens para qualquer jogador;
+- Exibir o passaporte de um jogador para outro jogador;
+- Exibir o passaporte de um personagem pelo ID do banco;
+- Buscar as informações do passaporte do personagem logado ou de qualquer personagem pelo ID;
+- Abrir o painel de renovação de passaporte;
+- Iniciar a cutscene de chegada para um jogador;
+- Deletar um personagem por ID ou por nome.
+
+## Funções Exportadas
+
+### Server-side
+
+- [openPanelCharacters](#openpanelcharacters) -> `Abre o painel de seleção de personagens para um jogador`
+- [startCutscenePlayer](#startcutsceneplayer) -> `Inicia a cutscene de chegada para um jogador`
+- [showPassport](#showpassport) -> `Exibe o passaporte do personagem logado para outro jogador`
+- [showPassportFromID](#showpassportfromid) -> `Exibe o passaporte de qualquer personagem pelo ID`
+- [openPassportRenew](#openpassportrenew) -> `Abre o painel de renovação de passaporte para um jogador`
+- [getPlayerPassportInfos](#getplayerpassportinfos) -> `Retorna as informações do passaporte do personagem logado`
+- [getPlayerPassportInfosByID](#getplayerpassportinfosbyid) -> `Retorna as informações do passaporte de um personagem pelo ID`
+- [deletePerson](#deleteperson) -> `Deleta um personagem por ID ou por nome@sobrenome`
+
+
+## openPanelCharacters
+
+**Side:** `server`
+
+**Syntax**
+```lua
+exports['sqh_multicharacters']:openPanelCharacters(player)
+```
+
+**Required arguments**
+- `player` (`player`): jogador que terá o painel de personagens aberto.
+
+**Comportamento**
+- Cria o ped de lobby e muda a dimensão do jogador.
+- Busca todos os personagens da conta principal do jogador e os envia para o client.
+- Toca a música de lobby e trava os controles do jogador.
+- Só abre se o jogador **não** estiver já no lobby.
+- Dispara o evento `serverConfig.events.onStartCreationCharacter`.
+
+**Return**
+- Sem retorno explícito. O painel é aberto via `triggerClientEvent` se tiver sucesso.
+
+**Example**
+```lua
+-- SERVER-SIDE
+addCommandHandler('personagens', function(player)
+    exports['sqh_multicharacters']:openPanelCharacters(player)
+end)
+```
+
+```lua
+-- SERVER-SIDE (abrir ao logar num sistema próprio)
+addEventHandler('onPlayerLogin', root, function(_, account)
+    exports['sqh_multicharacters']:openPanelCharacters(source)
+end)
+```
+
+
+## startCutscenePlayer
+
+**Side:** `server`
+
+**Syntax**
+```lua
+exports['sqh_multicharacters']:startCutscenePlayer(player)
+```
+
+**Required arguments**
+- `player` (`player`): jogador que irá assistir a cutscene de chegada.
+
+**Comportamento**
+- Só funciona se o jogador estiver com um personagem carregado (`playerLoggedInfos`).
+- Coloca o jogador numa dimensão exclusiva, cria o avião e inicia a sequência de câmera.
+- Ao terminar a cutscene, tira a foto do personagem, salva no banco e reposiciona o jogador.
+- Dispara `serverConfig.events.onFinishCutscene` ao fim.
+
+**Return**
+- Sem retorno explícito.
+
+**Example**
+```lua
+-- SERVER-SIDE
+addCommandHandler('cutscene', function(player)
+    exports['sqh_multicharacters']:startCutscenePlayer(player)
+end)
+```
+
+
+## showPassport
+
+**Side:** `server`
+
+**Syntax**
+```lua
+exports['sqh_multicharacters']:showPassport(fromPlayer, toPlayer)
+```
+
+**Required arguments**
+- `fromPlayer` (`player`): jogador cujo passaporte será exibido (deve ter um personagem logado).
+- `toPlayer` (`player`): jogador que verá o passaporte na tela.
+
+**Comportamento**
+- Busca os dados do personagem logado de `fromPlayer` no banco.
+- Envia a interface de visualização de passaporte para `toPlayer`.
+- Requer que `fromPlayer` tenha `playerLoggedInfos` com `personID` válido.
+
+**Return**
+- `false` se `fromPlayer` ou `toPlayer` forem inválidos, ou se o personagem não for encontrado.
+- Sem retorno explícito em caso de sucesso (abre a interface via `triggerClientEvent`).
+
+**Example**
+```lua
+-- SERVER-SIDE
+addCommandHandler('verpassaporte', function(player, _, targetName)
+    local target = getPlayerFromName(targetName)
+    if not target then
+        outputChatBox('Jogador não encontrado.', player)
+        return
+    end
+    exports['sqh_multicharacters']:showPassport(target, player)
+end)
+```
+
+
+## showPassportFromID
+
+**Side:** `server`
+
+**Syntax**
+```lua
+exports['sqh_multicharacters']:showPassportFromID(characterID, toPlayer)
+```
+
+**Required arguments**
+- `characterID` (`number`): ID do personagem no banco de dados.
+- `toPlayer` (`player`): jogador que verá o passaporte na tela.
+
+**Comportamento**
+- Busca o personagem pelo ID, independente de ele estar logado ou não.
+- Útil para sistemas de administração ou consulta de fichas.
+
+**Return**
+- `false` se `characterID` ou `toPlayer` forem inválidos, ou se o personagem não for encontrado.
+- `true` em caso de sucesso.
+
+**Example**
+```lua
+-- SERVER-SIDE
+addCommandHandler('fichapersonagem', function(player, _, charIDStr)
+    local charID = tonumber(charIDStr)
+    if not charID then
+        outputChatBox('ID inválido.', player)
+        return
+    end
+    local ok = exports['sqh_multicharacters']:showPassportFromID(charID, player)
+    outputChatBox(ok and 'Ficha enviada' or 'Personagem não encontrado.', player)
+end)
+```
+
+
+## openPassportRenew
+
+**Side:** `server`
+
+**Syntax**
+```lua
+exports['sqh_multicharacters']:openPassportRenew(player)
+```
+
+**Required arguments**
+- `player` (`player`): jogador que terá o painel de renovação aberto.
+
+**Comportamento**
+- Requer que o jogador tenha um personagem logado (`playerLoggedInfos`).
+- Abre a interface de renovação de passaporte, que permite editar nome, sobrenome, gênero, data de nascimento, nacionalidade e naturalidade (conforme `config.passport_renews.allowedEditions`).
+- Cobra o valor definido em `config.passport_renews.price` do jogador.
+
+**Return**
+- Sem retorno explícito. A interface é aberta via `triggerClientEvent` em caso de sucesso.
+
+**Example**
+```lua
+-- SERVER-SIDE (via marker ou NPC)
+addEventHandler('onMarkerHit', root, function(hitElement)
+    if getElementType(hitElement) == 'player' then
+        exports['sqh_multicharacters']:openPassportRenew(hitElement)
+    end
+end)
+```
+
+
+## getPlayerPassportInfos
+
+**Side:** `server`
+
+**Syntax**
+```lua
+local infos = exports['sqh_multicharacters']:getPlayerPassportInfos(player)
+```
+
+**Required arguments**
+- `player` (`player`): jogador com personagem logado.
+
+**Comportamento**
+- Requer que o jogador tenha um personagem logado.
+- Executa uma query coroutine-safe e aguarda o resultado antes de retornar.
+
+**Return**
+- `table` com os campos do passaporte em sucesso:
+```lua
+{
+    emissor       = "HVN",          -- slug do servidor
+    number        = 12,             -- player_id do personagem
+    city          = "CIDADE...",
+    name          = "João",
+    surname       = "Silva",
+    fullname      = "João Silva",
+    gender        = 1,              -- 1 = masculino, 2 = feminino
+    birthDate     = "01/01/2000",
+    nacionality   = "Brasileiro",
+    naturality    = "Brasília",
+    expeditionDate  = "04/03/2026",
+    expirationDate  = "03/04/2026",
+    profilePhoto  = "base64...",    -- nil se não houver foto
+    code          = "J O Ã O ..."   -- código do passaporte
+}
+```
+- `false` se o personagem não for encontrado ou o jogador não estiver logado.
+
+**Example**
+```lua
+-- SERVER-SIDE
+addCommandHandler('minhaficha', function(player)
+    local infos = exports['sqh_multicharacters']:getPlayerPassportInfos(player)
+    if infos then
+        outputChatBox('Nome: ' .. infos.fullname, player)
+        outputChatBox('Nascimento: ' .. infos.birthDate, player)
+    else
+        outputChatBox('Nenhum personagem logado.', player)
+    end
+end)
+```
+
+
+## getPlayerPassportInfosByID
+
+**Side:** `server`
+
+**Syntax**
+```lua
+local infos = exports['sqh_multicharacters']:getPlayerPassportInfosByID(characterID)
+```
+
+**Required arguments**
+- `characterID` (`number`): ID do personagem no banco de dados.
+
+**Comportamento**
+- Busca o personagem pelo ID, independente de ele estar logado.
+- Útil para sistemas externos que precisam buscar dados de qualquer personagem.
+- A busca é feita de forma coroutine-safe (bloqueia até obter resposta).
+
+**Return**
+- `table` com os mesmos campos de [getPlayerPassportInfos](#getplayerpassportinfos) em sucesso.
+- `false` se o personagem não for encontrado ou o ID for inválido.
+
+**Example**
+```lua
+-- SERVER-SIDE
+addCommandHandler('fichaporid', function(player, _, charIDStr)
+    local charID = tonumber(charIDStr)
+    if not charID then return end
+
+    local infos = exports['sqh_multicharacters']:getPlayerPassportInfosByID(charID)
+    if infos then
+        outputChatBox('Personagem: ' .. infos.fullname .. ' | Nascido em: ' .. infos.birthDate, player)
+    else
+        outputChatBox('Personagem não encontrado.', player)
+    end
+end)
+```
+
+
+## deletePerson
+
+**Side:** `server`
+
+**Syntax**
+```lua
+exports['sqh_multicharacters']:deletePerson(personIDOrAccount)
+```
+
+**Required arguments**
+- `personIDOrAccount` (`number` ou `string`):
+  - `number`: ID do personagem no banco de dados.
+  - `string`: nome e sobrenome no formato `"Nome@Sobrenome"` (usando o `nameSeparator` configurado).
+
+**Comportamento**
+- Deleta o personagem da tabela `characters` e da tabela `characters_profile`.
+- Remove a conta MTA associada ao personagem.
+- Caso o personagem esteja logado no momento, o jogador é expulso do servidor.
+
+**Return**
+- `true` quando a operação é iniciada com sucesso.
+- `false` se `personIDOrAccount` for nulo ou a licença for inválida.
+
+**Example**
+```lua
+-- SERVER-SIDE (por ID)
+addCommandHandler('deletarporid', function(player, _, idStr)
+    local id = tonumber(idStr)
+    if not id then return end
+    local ok = exports['sqh_multicharacters']:deletePerson(id)
+    outputChatBox(ok and 'Deletado.' or 'Falha.', player)
+end)
+```
+
+```lua
+-- SERVER-SIDE (por nome@sobrenome)
+addCommandHandler('deletarnome', function(player, _, nameArg)
+    -- nameArg esperado: "João@Silva"
+    local ok = exports['sqh_multicharacters']:deletePerson(nameArg)
+    outputChatBox(ok and 'Personagem deletado.' or 'Falha.', player)
+end)
+```
+
+
+## Observações
+
+- Todas as exports exigem que o resource já tenha sido liberado pela proteção de licença.
+- As funções que operam sobre personagens logados (`showPassport`, `getPlayerPassportInfos`, `openPassportRenew`, `startCutscenePlayer`) requerem que o jogador tenha passado pela tela de seleção de personagens.
+- As funções que recebem `characterID` funcionam independente do jogador estar online.
+- As funções acima seguem o que está exportado no `meta.xml` do `sqh_multicharacters`.

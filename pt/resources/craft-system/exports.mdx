@@ -1,0 +1,424 @@
+---
+title: Exports Craft System
+description: "Adquiriu o Craft System e está com dúvidas do sistema? você está no lugar certo!"
+---
+
+
+## Resolva problemas comuns
+
+<CardGroup cols={2}>
+  <Card
+    title="Resource não inicia"
+    icon="gear"
+    href="/pt/start"
+  >
+   Está com problemas para iniciar o seu produto? Clique aqui
+  </Card>
+    <Card
+    title="Configurar o resource"
+    icon="gear"
+    href="/pt/resources/craft-system#como-configurar-o-resource"
+  >
+   Está com dúvidas de como configurar algo no sistema? Clique aqui
+  </Card>
+</CardGroup>
+
+<img
+  src="/images/ashy-help.png"
+  alt="Hero Dark"
+/>
+
+## Sobre o sistema
+A proposta do Craft System é unir flexibilidade, persistência e controle total sobre as bancadas de crafting do seu servidor.
+O dono do servidor tem poder absoluto para criar bancadas fixas no mapa, conceder bancadas para jogadores, gerenciar upgrades e integrar com qualquer sistema de inventário.
+
+Com as funções exportadas, você pode:
+- Criar e deletar bancadas de crafting diretamente por script;
+- Forçar o spawn de uma bancada em posição fixa ou deixar o player posicioná-la com preview;
+- Gerenciar upgrades como combustível, slots de fabricação e fabricação paralela;
+- Consultar todas as mesas ativas, buscar uma mesa por objeto ou por marker;
+- Integrar o sistema de craft com empregos, missões, sistemas VIP e muito mais.
+
+## Funções Exportadas
+
+### Server-side
+
+- [createCraftTable](#createcrafttable) -> `Cria uma nova bancada de crafting`
+- [deleteCraftTable](#deletecrafttable) -> `Deleta uma bancada de crafting`
+- [addCraftTableUpgrade](#addcrafttableupgrade) -> `Adiciona ou atualiza um upgrade em uma bancada`
+- [forceCraftTableSpawn](#forcecrafttablespawn) -> `Força o spawn de uma bancada sem preview`
+- [spawnCraftTableWithPreview](#spawncrafttablewithpreview) -> `Inicia o posicionamento de uma bancada com preview para o player`
+- [spawnWithPreview](#spawnwithpreview) -> `Alias de spawnCraftTableWithPreview`
+- [spawnWithPreviewByOwner](#spawnwithpreviewbyowner) -> `Inicia preview buscando a mesa do owner automaticamente`
+- [getSpawnedCraftTables](#getspawnedcrafttables) -> `Retorna todas as bancadas atualmente spawnadas`
+- [getCraftTableByObject](#getcrafttablebyobject) -> `Busca os dados de uma bancada pelo elemento objeto`
+- [getCraftTableByMarker](#getcrafttablebymarker) -> `Busca os dados de uma bancada pelo elemento marker`
+
+
+## createCraftTable
+
+**Side:** `server`
+
+**Syntax**
+```lua
+local id = exports['sqh_craftsystem']:createCraftTable(position, permissions, upgrades, configId)
+```
+
+**Required arguments**
+- `position` (`table`): posição e rotação da bancada.
+  - `x` (`number`): coordenada X
+  - `y` (`number`): coordenada Y
+  - `z` (`number`): coordenada Z
+  - `rotX` (`number`): rotação X (padrão `0`)
+  - `rotY` (`number`): rotação Y (padrão `0`)
+  - `rotZ` (`number`): rotação Z (padrão `0`)
+  - `interior` (`number`): interior do jogo (padrão `0`)
+  - `dimension` (`number`): dimensão do jogo (padrão `0`)
+
+**Optional arguments**
+- `permissions` (`table`): lista de grupos ACL que podem usar a bancada. Exemplo: `{'Admin', 'Vip'}`. Se vazio ou `nil`, todos os players podem usar.
+- `upgrades` (`table`): upgrades iniciais da bancada.
+  - `fuel` (`number`): combustível inicial (padrão `0`)
+  - `consumable_boost` (`number`): ácido clorídrico inicial (padrão `0`)
+  - `slot_upgrade` (`number`): slots de fabricação iniciais (padrão `1`)
+  - `parallel_upgrade` (`number`): fabricações paralelas iniciais (padrão `1`)
+  - `primary_part_1` a `primary_part_4` (`number`): nível inicial das peças primárias (padrão `1`)
+- `configId` (`string`): ID fixo para identificar a bancada entre restarts. Recomendado para bancadas default.
+
+**Return**
+- `number` com o ID da bancada criada em sucesso.
+- `false` em falha.
+
+**Example**
+```lua
+-- SERVER-SIDE
+addCommandHandler('criarbanccada', function(player, cmd)
+    local px, py, pz = getElementPosition(player)
+
+    local id = exports['sqh_craftsystem']:createCraftTable(
+        { x = px, y = py, z = pz, rotZ = 0 },
+        { 'Admin' },
+        { fuel = 50, slot_upgrade = 2 },
+        'bancada_centro'
+    )
+
+    if id then
+        outputChatBox('Bancada criada com ID: ' .. id, player, 0, 255, 0)
+    else
+        outputChatBox('Falha ao criar bancada', player, 255, 0, 0)
+    end
+end)
+```
+
+
+## deleteCraftTable
+
+**Side:** `server`
+
+**Syntax**
+```lua
+local success, reason = exports['sqh_craftsystem']:deleteCraftTable(id)
+```
+
+**Required arguments**
+- `id` (`number`): ID da bancada a deletar.
+
+**Return**
+- `true` em sucesso.
+- `false, string` em falha (bancada não encontrada ou tipo inválido).
+
+**Observação**
+- Apenas bancadas do tipo `'default'` podem ser deletadas por este export. Bancadas de player são gerenciadas pelo próprio sistema.
+
+**Example**
+```lua
+-- SERVER-SIDE
+addCommandHandler('deletarbancada', function(player, cmd, id)
+    if not id then
+        outputChatBox('Use: /deletarbancada <id>', player)
+        return
+    end
+
+    local success, reason = exports['sqh_craftsystem']:deleteCraftTable(tonumber(id))
+    outputChatBox(success and 'Bancada deletada' or ('Erro: ' .. tostring(reason)), player)
+end)
+```
+
+
+## addCraftTableUpgrade
+
+**Side:** `server`
+
+**Syntax**
+```lua
+local success, reason = exports['sqh_craftsystem']:addCraftTableUpgrade(craftTableId, upgrade, value)
+```
+
+**Required arguments**
+- `craftTableId` (`number`): ID da bancada.
+- `upgrade` (`string`): nome do upgrade. Valores aceitos:
+  - `'fuel'` — combustível
+  - `'consumable_boost'` — ácido clorídrico (boost consumível)
+  - `'slot_upgrade'` — slots de fabricação
+  - `'parallel_upgrade'` — fabricações simultâneas
+  - `'primary_part_1'` a `'primary_part_4'` — nível das peças primárias
+- `value` (`number`): novo valor do upgrade. Será limitado automaticamente ao `min`/`max` configurado em `Config.upgradeSettings`.
+
+**Return**
+- `true` em sucesso.
+- `false, string` em falha.
+
+**Example**
+```lua
+-- SERVER-SIDE — Abastecer uma bancada com 80 de combustível
+exports['sqh_craftsystem']:addCraftTableUpgrade(1, 'fuel', 80)
+
+-- Desbloquear 3 slots de fabricação
+exports['sqh_craftsystem']:addCraftTableUpgrade(1, 'slot_upgrade', 3)
+
+-- Adicionar ácido clorídrico (boost)
+exports['sqh_craftsystem']:addCraftTableUpgrade(1, 'consumable_boost', 10)
+```
+
+
+## forceCraftTableSpawn
+
+**Side:** `server`
+
+**Syntax**
+```lua
+local success, reason = exports['sqh_craftsystem']:forceCraftTableSpawn(id)
+```
+
+**Required arguments**
+- `id` (`number`): ID da bancada a spawnar.
+
+**Return**
+- `true` em sucesso.
+- `false, string` em falha (bancada não encontrada ou já spawnada).
+
+**Observação**
+- Força o spawn na posição salva no banco de dados, sem exigir confirmação do player. Ideal para bancadas do tipo `'default'`.
+
+**Example**
+```lua
+-- SERVER-SIDE
+addEventHandler('onResourceStart', resourceRoot, function()
+    -- Força spawn de uma bancada default ao iniciar o resource
+    local success = exports['sqh_craftsystem']:forceCraftTableSpawn(1)
+    if not success then
+        outputDebugString('[CraftSystem] Falha ao spawnar bancada 1')
+    end
+end)
+```
+
+
+## spawnCraftTableWithPreview
+
+**Side:** `server`
+
+**Syntax**
+```lua
+local success = exports['sqh_craftsystem']:spawnCraftTableWithPreview(id, player)
+```
+
+**Required arguments**
+- `id` (`number`): ID da bancada.
+- `player` (`player`): player que receberá o modo preview para posicionar a bancada.
+
+**Return**
+- `true` se o modo preview foi iniciado com sucesso.
+- `false` se falhou (bancada não encontrada, player não é o dono, ou bancada já está spawnada).
+
+**Comportamento**
+- Se a bancada já estiver spawnada, o sistema marca a posição dela no mapa do player e retorna `false`.
+- Se o preview for cancelado pelo player, a bancada é automaticamente deletada.
+- Ao confirmar, a bancada é spawnada na posição escolhida.
+
+**Example**
+```lua
+-- SERVER-SIDE
+addCommandHandler('posicionarbancada', function(player, cmd, id)
+    if not id then
+        outputChatBox('Use: /posicionarbancada <id>', player)
+        return
+    end
+
+    local success = exports['sqh_craftsystem']:spawnCraftTableWithPreview(tonumber(id), player)
+    if not success then
+        outputChatBox('Não foi possível iniciar o posicionamento', player, 255, 150, 0)
+    end
+end)
+```
+
+
+## spawnWithPreview
+
+**Side:** `server`
+
+**Syntax**
+```lua
+local success = exports['sqh_craftsystem']:spawnWithPreview(id, player)
+```
+
+Alias direto de [spawnCraftTableWithPreview](#spawncrafttablewithpreview). Mesmos parâmetros, retorno e comportamento.
+
+**Example**
+```lua
+-- SERVER-SIDE
+exports['sqh_craftsystem']:spawnWithPreview(craftTableId, player)
+```
+
+
+## spawnWithPreviewByOwner
+
+**Side:** `server`
+
+**Syntax**
+```lua
+local success = exports['sqh_craftsystem']:spawnWithPreviewByOwner(player)
+```
+
+**Required arguments**
+- `player` (`player`): player cuja bancada será buscada e iniciará o preview.
+
+**Return**
+- `true` se o preview foi iniciado.
+- `false` se o player não possui bancada, ou se ela já está spawnada (nesse caso marca no mapa).
+
+**Observação**
+- Busca automaticamente a bancada do tipo `'player'` que pertence ao owner com o mesmo nome do player.
+- Útil para sistemas onde o player recebe a bancada como item e precisa posicioná-la sem saber o ID.
+
+**Example**
+```lua
+-- SERVER-SIDE — Chamado quando player usa um item de bancada no inventário
+addEvent('inventory:usarBancada', true)
+addEventHandler('inventory:usarBancada', root, function()
+    local player = client
+    exports['sqh_craftsystem']:spawnWithPreviewByOwner(player)
+end)
+```
+
+
+## getSpawnedCraftTables
+
+**Side:** `server`
+
+**Syntax**
+```lua
+local tables = exports['sqh_craftsystem']:getSpawnedCraftTables()
+```
+
+**Return**
+- `table` indexada por `craftTableId` com os dados de spawn no formato:
+```lua
+{
+    [1] = { object = element, marker = element },
+    [2] = { object = element, marker = element },
+    ...
+}
+```
+
+**Example**
+```lua
+-- SERVER-SIDE
+addCommandHandler('listarbancadas', function(player)
+    local tables = exports['sqh_craftsystem']:getSpawnedCraftTables()
+    local count = 0
+    for id, _ in pairs(tables) do
+        count = count + 1
+        outputChatBox('Bancada ativa: ID ' .. tostring(id), player)
+    end
+    outputChatBox('Total de bancadas spawnadas: ' .. count, player)
+end)
+```
+
+
+## getCraftTableByObject
+
+**Side:** `server`
+
+**Syntax**
+```lua
+local craftTable = exports['sqh_craftsystem']:getCraftTableByObject(object)
+```
+
+**Required arguments**
+- `object` (`element`): elemento do tipo `object` que representa a bancada no mundo.
+
+**Return**
+- `table` com os dados da bancada em sucesso.
+- `nil` se não encontrar.
+
+**Tabela retornada**
+
+| Campo | Tipo | Descrição |
+|---|---|---|
+| `id` | `number` | ID interno da bancada |
+| `type` | `string` | `'default'` ou `'player'` |
+| `owner` | `string` | Nome do dono (ou vazio para default) |
+| `pos_x/y/z` | `number` | Posição no mundo |
+| `rot_x/y/z` | `number` | Rotação |
+| `interior` | `number` | Interior |
+| `dimension` | `number` | Dimensão |
+| `permissions` | `string` | JSON de ACLs |
+| `fuel` | `number` | Combustível atual |
+| `consumable_boost` | `number` | Ácido clorídrico atual |
+| `slot_upgrade` | `number` | Slots de fabricação |
+| `parallel_upgrade` | `number` | Fabricações paralelas |
+| `primary_part_1..4` | `number` | Nível de cada peça primária |
+| `is_spawned` | `number` | `1` se spawnada, `0` se não |
+
+**Example**
+```lua
+-- SERVER-SIDE
+addEventHandler('onElementClicked', root, function(button, state, player)
+    if button ~= 'right' or state ~= 'down' then return end
+    if getElementType(source) ~= 'object' then return end
+
+    local craftTable = exports['sqh_craftsystem']:getCraftTableByObject(source)
+    if craftTable then
+        outputChatBox('Bancada ID: ' .. craftTable.id .. ' | Combustível: ' .. craftTable.fuel, player)
+    end
+end)
+```
+
+
+## getCraftTableByMarker
+
+**Side:** `server`
+
+**Syntax**
+```lua
+local craftTable = exports['sqh_craftsystem']:getCraftTableByMarker(marker)
+```
+
+**Required arguments**
+- `marker` (`element`): elemento do tipo `marker` associado a uma bancada.
+
+**Return**
+- `table` com os dados da bancada em sucesso (mesma estrutura de [getCraftTableByObject](#getcrafttablebyobject)).
+- `nil` se não encontrar.
+
+**Example**
+```lua
+-- SERVER-SIDE
+addEventHandler('onMarkerHit', root, function(hitElement, matchingDimension)
+    if not matchingDimension then return end
+    if getElementType(hitElement) ~= 'player' then return end
+
+    local craftTable = exports['sqh_craftsystem']:getCraftTableByMarker(source)
+    if craftTable then
+        outputChatBox('Você está próximo da bancada ID: ' .. craftTable.id, hitElement)
+    end
+end)
+```
+
+
+## Observações
+
+- Todas as exports exigem que o resource já tenha sido iniciado e a licença validada.
+- As funções acima seguem exatamente o que está exportado no `meta.xml` do `sqh_craftsystem`.
+- Upgrades têm limites definidos em `Config.upgradeSettings` — valores fora do intervalo são ajustados automaticamente.
+- Bancadas do tipo `'player'` não podem ser deletadas via `deleteCraftTable`; elas são gerenciadas pelo próprio flow do sistema.
